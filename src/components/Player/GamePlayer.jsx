@@ -37,7 +37,7 @@ function GamePlayer({ gameData }) {
   const [prestigeEngine, setPrestigeEngine] = useState(null);
   const [gameState, setGameState] = useState(null);
   const [, forceUpdate] = useState(0);
-  const [activeTab, setActiveTab] = useState('main');
+  const [activeSection, setActiveSection] = useState('buildings'); // buildings, upgrades, achievements, stats
   const [notification, setNotification] = useState(null);
   const saveIntervalRef = useRef(null);
 
@@ -76,43 +76,43 @@ function GamePlayer({ gameData }) {
   }, [gameData]);
 
   if (!gameEngine || !gameState) {
-    return <div className="loading">Lade Spiel...</div>;
+    return <div className="loading">Loading game...</div>;
   }
 
   const handleClick = () => {
     gameEngine.click();
   };
 
-  const handleBuyBuilding = (buildingId) => {
-    const success = gameEngine.buyBuilding(buildingId);
+  const handleBuyBuilding = (buildingId, amount = 1) => {
+    const success = gameEngine.buyBuilding(buildingId, amount);
     if (!success) {
-      showNotification('Nicht genug Ressourcen!', 'error');
+      showNotification('Not enough resources!', 'error');
     }
   };
 
   const handleBuyUpgrade = (upgradeId) => {
     const success = gameEngine.buyUpgrade(upgradeId);
     if (success) {
-      showNotification('Upgrade gekauft!', 'success');
+      showNotification('Upgrade purchased!', 'success');
     } else {
-      showNotification('Nicht genug Ressourcen oder noch nicht freigeschaltet!', 'error');
+      showNotification('Cannot afford or not unlocked!', 'error');
     }
   };
 
   const handlePrestige = () => {
-    if (confirm('Wirklich Prestige durchführen? Dies setzt das Spiel zurück!')) {
+    if (confirm('Really prestige? This will reset your progress!')) {
       const success = prestigeEngine.performPrestige();
       if (success) {
-        showNotification('Prestige erfolgreich! Du hast jetzt permanente Boni.', 'success');
+        showNotification('Prestige successful! You now have permanent bonuses.', 'success');
       }
     }
   };
 
   const handleReset = () => {
-    if (confirm('Spielstand wirklich komplett zurücksetzen? Dies kann nicht rückgängig gemacht werden!')) {
+    if (confirm('Really reset all progress? This cannot be undone!')) {
       localStorage.removeItem(`game_${gameData.meta.title}`);
       gameEngine.reset(false);
-      showNotification('Spielstand zurückgesetzt', 'info');
+      showNotification('Progress reset', 'info');
     }
   };
 
@@ -137,356 +137,355 @@ function GamePlayer({ gameData }) {
     '--border-radius': gameData.theme.borderRadius
   };
 
+  // Get unlocked achievements
+  const unlockedAchievements = gameData.achievements.filter(
+    ach => gameState.achievements[ach.id]?.unlocked
+  );
+
+  // Get visible buildings (unlocked or affordable soon)
+  const visibleBuildings = gameData.buildings.filter(building => {
+    const owned = gameState.buildings[building.id].owned;
+    if (owned > 0) return true;
+
+    // Show if we can almost afford it (within 2x of cost)
+    const cost = gameEngine.calculateBuildingCost(building, 0, 1);
+    return cost.every(c => gameState.resources[c.resourceId]?.amount >= c.amount * 0.5);
+  });
+
+  // Get unlocked upgrades
+  const unlockedUpgrades = gameData.upgrades.filter(
+    up => gameState.upgrades[up.id]?.unlocked && !gameState.upgrades[up.id]?.purchased
+  );
+
   return (
     <div className="game-player" style={themeStyle}>
-      <header className="game-header">
-        <h1>{gameData.meta.title}</h1>
-        {gameData.meta.author && <p className="author">von {gameData.meta.author}</p>}
-      </header>
-
+      {/* Notification Toast */}
       {notification && (
-        <div className={`notification notification-${notification.type}`}>
+        <div className={`game-notification game-notification-${notification.type}`}>
           {notification.message}
         </div>
       )}
 
-      <div className="game-tabs">
-        <button
-          className={`tab ${activeTab === 'main' ? 'active' : ''}`}
-          onClick={() => setActiveTab('main')}
-        >
-          Spiel
-        </button>
-        <button
-          className={`tab ${activeTab === 'buildings' ? 'active' : ''}`}
-          onClick={() => setActiveTab('buildings')}
-        >
-          Gebäude
-        </button>
-        <button
-          className={`tab ${activeTab === 'upgrades' ? 'active' : ''}`}
-          onClick={() => setActiveTab('upgrades')}
-        >
-          Upgrades
-        </button>
-        <button
-          className={`tab ${activeTab === 'achievements' ? 'active' : ''}`}
-          onClick={() => setActiveTab('achievements')}
-        >
-          Erfolge
-        </button>
-        {gameData.prestige.enabled && (
-          <button
-            className={`tab ${activeTab === 'prestige' ? 'active' : ''}`}
-            onClick={() => setActiveTab('prestige')}
-          >
-            Prestige
-          </button>
-        )}
-        <button
-          className={`tab ${activeTab === 'stats' ? 'active' : ''}`}
-          onClick={() => setActiveTab('stats')}
-        >
-          Statistik
-        </button>
-      </div>
+      {/* Left Sidebar - Stats & Resources */}
+      <aside className="game-sidebar game-sidebar-left">
+        <div className="game-header">
+          <h1 className="game-title">{gameData.meta.title}</h1>
+          {gameData.meta.author && (
+            <p className="game-author">by {gameData.meta.author}</p>
+          )}
+        </div>
 
-      <div className="game-content">
-        {activeTab === 'main' && (
-          <div className="main-tab">
-            <div className="resources">
-              {gameData.resources.map(resource => (
-                <div key={resource.id} className="resource">
-                  <span className="resource-icon"><RenderIcon icon={resource.icon} size={24} /></span>
-                  <span className="resource-name">{resource.name}</span>
-                  <span className="resource-amount">
-                    {FormatUtils.formatNumber(gameState.resources[resource.id]?.amount || 0)}
-                  </span>
-                  {gameState.resources[resource.id]?.perSecond > 0 && (
-                    <span className="resource-rate">
-                      ({FormatUtils.formatPerSecond(gameState.resources[resource.id].perSecond)})
+        {/* Resources */}
+        <div className="sidebar-section">
+          <h2 className="section-title">Resources</h2>
+          <div className="resources-list">
+            {gameData.resources.map(resource => {
+              const resState = gameState.resources[resource.id];
+              return (
+                <div key={resource.id} className="resource-item">
+                  <div className="resource-header">
+                    <span className="resource-icon">
+                      <RenderIcon icon={resource.icon} size={20} />
                     </span>
+                    <span className="resource-name">{resource.name}</span>
+                  </div>
+                  <div className="resource-amount">
+                    {FormatUtils.formatNumber(resState?.amount || 0)}
+                  </div>
+                  {resState?.perSecond > 0 && (
+                    <div className="resource-rate">
+                      +{FormatUtils.formatPerSecond(resState.perSecond)}
+                    </div>
                   )}
                 </div>
-              ))}
-            </div>
+              );
+            })}
+          </div>
+        </div>
 
-            {clickResource && (
-              <div className="click-area">
-                <button onClick={handleClick} className="click-button">
-                  <span className="click-icon"><RenderIcon icon={clickResource.icon} size={48} /></span>
-                  <span className="click-text">Click!</span>
-                </button>
-                <div className="click-info">
-                  +{FormatUtils.formatNumber(
-                    (clickResource.clickAmount || 1) * gameEngine.getTotalMultiplier(clickResource.id, 'click')
-                  )} pro Click
-                </div>
+        {/* Stats */}
+        <div className="sidebar-section">
+          <h2 className="section-title">Statistics</h2>
+          <div className="stats-grid">
+            <div className="stat-item">
+              <div className="stat-value">{FormatUtils.formatNumber(gameState.totalClicks)}</div>
+              <div className="stat-label">Total Clicks</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-value">
+                {Object.values(gameState.buildings).reduce((sum, b) => sum + b.owned, 0)}
+              </div>
+              <div className="stat-label">Buildings</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-value">{unlockedAchievements.length}/{gameData.achievements.length}</div>
+              <div className="stat-label">Achievements</div>
+            </div>
+            {gameData.prestige.enabled && (
+              <div className="stat-item">
+                <div className="stat-value">{gameState.prestige.level}</div>
+                <div className="stat-label">Prestige Level</div>
               </div>
             )}
-
-            <div className="quick-buildings">
-              <h3>Gebäude (Schnellkauf)</h3>
-              {gameData.buildings.slice(0, 3).map(building => {
-                const cost = gameEngine.calculateBuildingCost(building, gameState.buildings[building.id].owned);
-                const canAfford = cost.every(c =>
-                  gameState.resources[c.resourceId]?.amount >= c.amount
-                );
-
-                return (
-                  <div key={building.id} className="quick-building">
-                    <button
-                      onClick={() => handleBuyBuilding(building.id)}
-                      disabled={!canAfford}
-                      className="buy-button"
-                    >
-                      <span className="building-icon"><RenderIcon icon={building.icon} size={24} /></span>
-                      <span className="building-name">{building.name}</span>
-                      <span className="building-owned">({gameState.buildings[building.id].owned})</span>
-                    </button>
-                    <div className="building-cost">
-                      {cost.map(c => {
-                        const res = gameData.resources.find(r => r.id === c.resourceId);
-                        return (
-                          <span key={c.resourceId}>
-                            <RenderIcon icon={res?.icon} size={16} /> {FormatUtils.formatNumber(c.amount)}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           </div>
-        )}
+        </div>
 
-        {activeTab === 'buildings' && (
-          <div className="buildings-tab">
-            <h2>Gebäude</h2>
-            <div className="buildings-list">
-              {gameData.buildings.map(building => {
-                const cost = gameEngine.calculateBuildingCost(building, gameState.buildings[building.id].owned);
-                const canAfford = cost.every(c =>
-                  gameState.resources[c.resourceId]?.amount >= c.amount
-                );
-
-                return (
-                  <div key={building.id} className="building-card">
-                    <div className="building-header">
-                      <span className="building-icon">{building.icon}</span>
-                      <div className="building-info">
-                        <h3>{building.name}</h3>
-                        <p>{building.description}</p>
-                      </div>
-                    </div>
-
-                    <div className="building-stats">
-                      <div>Besitzt: {gameState.buildings[building.id].owned}</div>
-                      <div>Produziert:</div>
-                      {building.produces.map(prod => {
-                        const res = gameData.resources.find(r => r.id === prod.resourceId);
-                        const amount = prod.amount * gameState.buildings[building.id].owned;
-                        return (
-                          <div key={prod.resourceId}>
-                            <RenderIcon icon={res?.icon} size={16} /> {FormatUtils.formatPerSecond(amount)}
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    <div className="building-actions">
-                      <div className="building-cost">
-                        Kosten:
-                        {cost.map(c => {
-                          const res = gameData.resources.find(r => r.id === c.resourceId);
-                          return (
-                            <span key={c.resourceId}>
-                              <RenderIcon icon={res?.icon} size={16} /> {FormatUtils.formatNumber(c.amount)}
-                            </span>
-                          );
-                        })}
-                      </div>
-                      <button
-                        onClick={() => handleBuyBuilding(building.id)}
-                        disabled={!canAfford}
-                        className="buy-button"
-                      >
-                        Kaufen (x1)
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'upgrades' && (
-          <div className="upgrades-tab">
-            <h2>Upgrades</h2>
-            <div className="upgrades-list">
-              {gameData.upgrades.map(upgrade => {
-                const upgradeState = gameState.upgrades[upgrade.id];
-                const canAfford = upgrade.cost.every(c =>
-                  gameState.resources[c.resourceId]?.amount >= c.amount
-                );
-
-                if (upgradeState.purchased) {
-                  return (
-                    <div key={upgrade.id} className="upgrade-card purchased">
-                      <span className="upgrade-icon"><RenderIcon icon={upgrade.icon} size={32} /></span>
-                      <div className="upgrade-info">
-                        <h3>{upgrade.name}</h3>
-                        <p>{upgrade.description}</p>
-                        <div className="purchased-badge">✓ Gekauft</div>
-                      </div>
-                    </div>
-                  );
-                }
-
-                if (!upgradeState.unlocked) {
-                  return (
-                    <div key={upgrade.id} className="upgrade-card locked">
-                      <span className="upgrade-icon">🔒</span>
-                      <div className="upgrade-info">
-                        <h3>???</h3>
-                        <p>Noch nicht freigeschaltet</p>
-                      </div>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div key={upgrade.id} className="upgrade-card">
-                    <span className="upgrade-icon"><RenderIcon icon={upgrade.icon} size={32} /></span>
-                    <div className="upgrade-info">
-                      <h3>{upgrade.name}</h3>
-                      <p>{upgrade.description}</p>
-                      <div className="upgrade-cost">
-                        Kosten:
-                        {upgrade.cost.map(c => {
-                          const res = gameData.resources.find(r => r.id === c.resourceId);
-                          return (
-                            <span key={c.resourceId}>
-                              <RenderIcon icon={res?.icon} size={16} /> {FormatUtils.formatNumber(c.amount)}
-                            </span>
-                          );
-                        })}
-                      </div>
-                      <button
-                        onClick={() => handleBuyUpgrade(upgrade.id)}
-                        disabled={!canAfford}
-                        className="buy-button"
-                      >
-                        Kaufen
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'achievements' && (
-          <div className="achievements-tab">
-            <h2>Erfolge</h2>
-            <div className="achievements-grid">
-              {gameData.achievements.map(achievement => {
-                const unlocked = gameState.achievements[achievement.id].unlocked;
-
-                return (
-                  <div
-                    key={achievement.id}
-                    className={`achievement-card ${unlocked ? 'unlocked' : 'locked'}`}
-                  >
-                    <span className="achievement-icon">
-                      {unlocked ? <RenderIcon icon={achievement.icon} size={32} /> : '🔒'}
-                    </span>
-                    <div className="achievement-info">
-                      <h3>{unlocked ? achievement.name : '???'}</h3>
-                      <p>{unlocked ? achievement.description : 'Noch nicht freigeschaltet'}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'prestige' && gameData.prestige.enabled && (
-          <div className="prestige-tab">
-            <h2>Prestige</h2>
+        {/* Prestige */}
+        {gameData.prestige.enabled && (
+          <div className="sidebar-section">
+            <h2 className="section-title">Prestige</h2>
             <div className="prestige-info">
-              <div className="prestige-stats">
-                <div>Prestige Level: {prestigeBonus.level}</div>
-                <div>Prestige Währung: {prestigeBonus.currency}</div>
-                <div>Produktions-Multiplikator: x{prestigeBonus.productionMultiplier.toFixed(2)}</div>
-                <div>Click-Multiplikator: x{prestigeBonus.clickMultiplier.toFixed(2)}</div>
+              <div className="prestige-bonus">
+                Current Bonus: <span className="accent">+{Math.round((prestigeBonus - 1) * 100)}%</span>
               </div>
-
-              <div className="prestige-action">
-                <h3>Prestige durchführen</h3>
-                <p>Du würdest erhalten: {prestigeCurrency} Prestige-Währung</p>
-                <button
-                  onClick={handlePrestige}
-                  disabled={!canPrestige}
-                  className="prestige-button"
-                >
-                  {canPrestige ? 'Prestige!' : 'Noch nicht verfügbar'}
-                </button>
-                {!canPrestige && (
-                  <p className="prestige-hint">
-                    Du benötigst mehr {gameData.resources.find(r => r.id === gameData.prestige.baseResource)?.name}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'stats' && (
-          <div className="stats-tab">
-            <h2>Statistiken</h2>
-            <div className="stats-grid">
-              <div className="stat">
-                <span className="stat-label">Gesamte Clicks:</span>
-                <span className="stat-value">{FormatUtils.formatNumber(gameState.totalClicks)}</span>
-              </div>
-              <div className="stat">
-                <span className="stat-label">Spielzeit:</span>
-                <span className="stat-value">
-                  {FormatUtils.formatTime((Date.now() - gameState.startTime) / 1000)}
-                </span>
-              </div>
-              {gameData.resources.map(resource => (
-                <div key={resource.id} className="stat">
-                  <span className="stat-label">
-                    <RenderIcon icon={resource.icon} size={16} /> {resource.name} (Total):
-                  </span>
-                  <span className="stat-value">
-                    {FormatUtils.formatNumber(gameState.resources[resource.id]?.total || 0)}
-                  </span>
+              {canPrestige && (
+                <div className="prestige-gain">
+                  Next: <span className="accent">+{prestigeCurrency}</span> prestige points
                 </div>
-              ))}
-              <div className="stat">
-                <span className="stat-label">Achievements:</span>
-                <span className="stat-value">
-                  {Object.values(gameState.achievements).filter(a => a.unlocked).length} / {gameData.achievements.length}
-                </span>
-              </div>
-            </div>
-
-            <div className="danger-zone">
-              <h3>Danger Zone</h3>
-              <button onClick={handleReset} className="reset-button">
-                Spielstand komplett zurücksetzen
+              )}
+              <button
+                className="prestige-button"
+                onClick={handlePrestige}
+                disabled={!canPrestige}
+              >
+                {canPrestige ? 'Prestige!' : 'Not Ready'}
               </button>
             </div>
           </div>
         )}
-      </div>
+
+        {/* Settings */}
+        <div className="sidebar-section">
+          <button className="settings-button" onClick={handleReset}>
+            Reset Progress
+          </button>
+        </div>
+      </aside>
+
+      {/* Center Area - Click & Main Display */}
+      <main className="game-main">
+        {clickResource && (
+          <div className="click-section">
+            <button className="click-button" onClick={handleClick}>
+              <div className="click-icon">
+                <RenderIcon icon={clickResource.icon} size={120} />
+              </div>
+            </button>
+            <div className="click-info">
+              <div className="click-value">
+                +{FormatUtils.formatNumber(
+                  (clickResource.clickAmount || 1) * gameEngine.getTotalMultiplier(clickResource.id, 'click')
+                )} per click
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Recent Achievements */}
+        {unlockedAchievements.length > 0 && (
+          <div className="achievements-showcase">
+            <h3>Recent Achievements</h3>
+            <div className="achievements-list-horizontal">
+              {unlockedAchievements.slice(-5).reverse().map(ach => (
+                <div key={ach.id} className="achievement-badge" title={ach.description}>
+                  <div className="achievement-icon">
+                    <RenderIcon icon={ach.icon} size={32} />
+                  </div>
+                  <div className="achievement-name">{ach.name}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* Right Sidebar - Purchases */}
+      <aside className="game-sidebar game-sidebar-right">
+        {/* Section Tabs */}
+        <div className="section-tabs">
+          <button
+            className={`section-tab ${activeSection === 'buildings' ? 'active' : ''}`}
+            onClick={() => setActiveSection('buildings')}
+          >
+            <span>🏠</span> Buildings
+          </button>
+          <button
+            className={`section-tab ${activeSection === 'upgrades' ? 'active' : ''}`}
+            onClick={() => setActiveSection('upgrades')}
+          >
+            <span>⬆️</span> Upgrades
+            {unlockedUpgrades.length > 0 && (
+              <span className="tab-badge">{unlockedUpgrades.length}</span>
+            )}
+          </button>
+          <button
+            className={`section-tab ${activeSection === 'achievements' ? 'active' : ''}`}
+            onClick={() => setActiveSection('achievements')}
+          >
+            <span>🏆</span> Achievements
+          </button>
+        </div>
+
+        {/* Scrollable Content */}
+        <div className="section-content">
+          {activeSection === 'buildings' && (
+            <div className="buildings-list">
+              {visibleBuildings.map(building => {
+                const buildingState = gameState.buildings[building.id];
+                const cost = gameEngine.calculateBuildingCost(building, buildingState.owned, 1);
+                const canAfford = cost.every(c =>
+                  gameState.resources[c.resourceId]?.amount >= c.amount
+                );
+
+                return (
+                  <div key={building.id} className={`purchase-card ${!canAfford ? 'disabled' : ''}`}>
+                    <div className="card-header">
+                      <div className="card-icon">
+                        <RenderIcon icon={building.icon} size={32} />
+                      </div>
+                      <div className="card-info">
+                        <h3 className="card-title">{building.name}</h3>
+                        <p className="card-description">{building.description}</p>
+                      </div>
+                    </div>
+
+                    <div className="card-stats">
+                      <div className="stat-row">
+                        <span className="stat-label">Owned:</span>
+                        <span className="stat-value">{buildingState.owned}</span>
+                      </div>
+                      <div className="stat-row">
+                        <span className="stat-label">Produces:</span>
+                        <span className="stat-value">
+                          {building.produces.map(prod => {
+                            const res = gameData.resources.find(r => r.id === prod.resourceId);
+                            return (
+                              <span key={prod.resourceId}>
+                                <RenderIcon icon={res?.icon} size={14} />
+                                {' '}{FormatUtils.formatPerSecond(prod.amount)}
+                              </span>
+                            );
+                          })}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="card-actions">
+                      <div className="card-cost">
+                        {cost.map(c => {
+                          const res = gameData.resources.find(r => r.id === c.resourceId);
+                          const hasEnough = gameState.resources[c.resourceId]?.amount >= c.amount;
+                          return (
+                            <span key={c.resourceId} className={!hasEnough ? 'insufficient' : ''}>
+                              <RenderIcon icon={res?.icon} size={16} />
+                              {' '}{FormatUtils.formatNumber(c.amount)}
+                            </span>
+                          );
+                        })}
+                      </div>
+                      <div className="buy-buttons">
+                        <button
+                          className="buy-button buy-1"
+                          onClick={() => handleBuyBuilding(building.id, 1)}
+                          disabled={!canAfford}
+                        >
+                          Buy 1
+                        </button>
+                        <button
+                          className="buy-button buy-10"
+                          onClick={() => handleBuyBuilding(building.id, 10)}
+                          disabled={!canAfford}
+                          title="Buy 10"
+                        >
+                          10
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {activeSection === 'upgrades' && (
+            <div className="upgrades-list">
+              {unlockedUpgrades.length === 0 && (
+                <div className="empty-state">
+                  <p>No upgrades available yet</p>
+                </div>
+              )}
+              {unlockedUpgrades.map(upgrade => {
+                const canAfford = upgrade.cost.every(c =>
+                  gameState.resources[c.resourceId]?.amount >= c.amount
+                );
+
+                return (
+                  <div key={upgrade.id} className={`purchase-card ${!canAfford ? 'disabled' : ''}`}>
+                    <div className="card-header">
+                      <div className="card-icon">
+                        <RenderIcon icon={upgrade.icon} size={32} />
+                      </div>
+                      <div className="card-info">
+                        <h3 className="card-title">{upgrade.name}</h3>
+                        <p className="card-description">{upgrade.description}</p>
+                      </div>
+                    </div>
+
+                    <div className="card-actions">
+                      <div className="card-cost">
+                        {upgrade.cost.map(c => {
+                          const res = gameData.resources.find(r => r.id === c.resourceId);
+                          const hasEnough = gameState.resources[c.resourceId]?.amount >= c.amount;
+                          return (
+                            <span key={c.resourceId} className={!hasEnough ? 'insufficient' : ''}>
+                              <RenderIcon icon={res?.icon} size={16} />
+                              {' '}{FormatUtils.formatNumber(c.amount)}
+                            </span>
+                          );
+                        })}
+                      </div>
+                      <button
+                        className="buy-button buy-upgrade"
+                        onClick={() => handleBuyUpgrade(upgrade.id)}
+                        disabled={!canAfford}
+                      >
+                        Purchase
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {activeSection === 'achievements' && (
+            <div className="achievements-list">
+              {gameData.achievements.map(ach => {
+                const achState = gameState.achievements[ach.id];
+                const isUnlocked = achState?.unlocked;
+
+                return (
+                  <div
+                    key={ach.id}
+                    className={`achievement-card ${isUnlocked ? 'unlocked' : 'locked'}`}
+                  >
+                    <div className="achievement-icon">
+                      <RenderIcon icon={ach.icon} size={40} />
+                    </div>
+                    <div className="achievement-info">
+                      <h3 className="achievement-title">{ach.name}</h3>
+                      <p className="achievement-description">{ach.description}</p>
+                      {isUnlocked && (
+                        <div className="achievement-unlocked">✓ Unlocked</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </aside>
     </div>
   );
 }

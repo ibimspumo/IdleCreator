@@ -22,7 +22,13 @@ export const CompressionUtils = {
   decompress(compressedString) {
     try {
       const decompressed = LZString.decompressFromBase64(compressedString);
-      const gameData = JSON.parse(decompressed);
+      let gameData = JSON.parse(decompressed);
+
+      // Ensure logic property exists for older game data (single flow)
+      if (!gameData.logic) {
+        gameData.logic = { nodes: [], edges: [] };
+      }
+      
       return gameData;
     } catch (error) {
       console.error('Decompression failed:', error);
@@ -32,7 +38,7 @@ export const CompressionUtils = {
 
   // Validiert Game Data Struktur
   validate(gameData) {
-    const required = ['meta', 'resources', 'buildings', 'upgrades', 'achievements', 'theme'];
+    const required = ['meta', 'resources', 'buildings', 'upgrades', 'achievements', 'theme', 'logic'];
 
     for (const field of required) {
       if (!gameData[field]) {
@@ -47,6 +53,10 @@ export const CompressionUtils = {
 
     if (!Array.isArray(gameData.buildings)) {
       return { valid: false, error: 'Buildings must be an array' };
+    }
+    
+    if (typeof gameData.logic !== 'object' || !Array.isArray(gameData.logic.nodes) || !Array.isArray(gameData.logic.edges)) {
+        return { valid: false, error: 'Logic data is malformed.' };
     }
 
     return { valid: true };
@@ -131,13 +141,19 @@ export const CompressionUtils = {
         multiplier: 1
       },
       theme: {
-        primaryColor: '#4f46e5',
+        primaryColor: '#6366f1',
         secondaryColor: '#818cf8',
-        backgroundColor: '#1f2937',
-        textColor: '#f3f4f6',
-        accentColor: '#fbbf24',
+        backgroundColor: '#0a0a0a',
+        textColor: '#ffffff',
+        accentColor: '#10b981',
         fontFamily: 'Inter, system-ui, sans-serif',
         borderRadius: '8px'
+      },
+      logic: {
+        nodes: [
+          { id: 'event-start', type: 'event', position: { x: 250, y: 50 }, data: { eventType: 'onGameStart' } },
+        ],
+        edges: [],
       }
     };
   }

@@ -1,0 +1,124 @@
+.logic-node-properties-panel {
+    padding: 1rem;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border-left: 1px solid var(--border-primary);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.logic-node-properties-panel .no-node-selected {
+    color: var(--text-secondary);
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.logic-node-properties-panel .node-properties-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-secondary);
+}
+
+.logic-node-properties-panel .node-properties-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.logic-node-properties-panel .node-id {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    background-color: var(--bg-tertiary);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+.logic-node-properties-panel .properties-content {
+    flex-grow: 1;
+}
+
+.logic-node-properties-panel .property-field {
+    margin-bottom: 1rem;
+}
+
+.logic-node-properties-panel .property-label {
+    display: block;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.logic-node-properties-panel .property-input,
+.logic-node-properties-panel .property-select,
+.logic-node-properties-panel .property-textarea {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 0.8125rem;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.logic-node-properties-panel .property-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.logic-node-properties-panel .property-input:focus,
+.logic-node-properties-panel .property-select:focus,
+.logic-node-properties-panel .property-textarea:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    background: var(--bg-primary);
+}
+
+/* Color Preset Grid */
+.color-preset-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+}
+
+.color-preset-button {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    border: 2px solid;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.color-preset-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.color-preset-button.active {
+    border-width: 3px;
+    box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px currentColor;
+}
+
+.color-preset-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+}

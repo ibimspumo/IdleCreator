@@ -1,0 +1,167 @@
+.custom-node {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 12px;
+    color: var(--text-primary);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    min-width: 180px;
+    transition: all 0.2s ease;
+}
+
+.custom-node.selected {
+    border: 2px solid var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2), 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.custom-node .node-header {
+    font-weight: bold;
+    margin-bottom: 8px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--border-secondary);
+}
+
+.custom-node .node-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.custom-node label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.custom-node select,
+.custom-node input {
+    width: 100%;
+    padding: 4px;
+    border-radius: 4px;
+    border: 1px solid var(--border-primary);
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    cursor: pointer;
+    pointer-events: all;
+}
+
+.custom-node select:focus,
+.custom-node input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+}
+
+/* Prevent dragging when interacting with form elements */
+.custom-node select,
+.custom-node input,
+.custom-node button {
+    -webkit-user-drag: none;
+    user-select: none;
+}
+
+.react-flow__handle {
+    background: var(--accent-primary);
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--bg-primary);
+}
+
+/* Handle Labels for Condition Nodes */
+.handle-label {
+    position: absolute;
+    bottom: -20px;
+    font-size: 0.625rem;
+    font-weight: 600;
+    pointer-events: none;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.handle-label-true {
+    left: 30%;
+    transform: translateX(-50%);
+    color: #10b981;
+    text-shadow: 0 0 4px rgba(16, 185, 129, 0.3);
+}
+
+.handle-label-false {
+    left: 70%;
+    transform: translateX(-50%);
+    color: #ef4444;
+    text-shadow: 0 0 4px rgba(239, 68, 68, 0.3);
+}
+
+/* Make condition nodes taller to accommodate bottom handles and labels */
+.condition-node {
+    padding-bottom: 30px;
+}
+
+/* Group Node - For visual organization */
+.group-node {
+    background: rgba(79, 70, 229, 0.05);
+    border: 2px dashed var(--accent-primary);
+    border-radius: 12px;
+    padding: 12px;
+    min-width: 200px;
+    min-height: 150px;
+    opacity: 0.8;
+    display: flex;
+    flex-direction: column;
+}
+
+.group-node.selected {
+    background: rgba(79, 70, 229, 0.1);
+    border: 2px dashed var(--accent-primary);
+    border-width: 3px;
+    opacity: 1;
+}
+
+/* Group Header */
+.group-header {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(79, 70, 229, 0.15);
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.group-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Optional description hint */
+.group-description-hint {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    font-style: italic;
+    padding: 0 12px;
+    opacity: 0.7;
+}
+
+/* Make group nodes always be in the background */
+.react-flow__node-group {
+    z-index: -1;
+}
+
+/* Hide the default NodeResizer border to avoid double border */
+.group-node .react-flow__resize-control {
+    border: none;
+}
+
+.group-node .react-flow__resize-control.line {
+    border: none !important;
+}
+
+.group-node .react-flow__resize-control.handle {
+    width: 12px;
+    height: 12px;
+    background: var(--accent-primary);
+    border: 2px solid white;
+    border-radius: 50%;
+}

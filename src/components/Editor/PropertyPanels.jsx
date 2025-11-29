@@ -609,10 +609,85 @@ function RequirementBuilder({ requirement, resources, buildings, onChange, onRem
   );
 }
 
+// Color Picker Field with Presets
+function ColorPickerField({ label, value, onChange }) {
+  const [showPresets, setShowPresets] = useState(false);
+
+  const colorPresets = [
+    // Blues & Purples
+    '#6366f1', '#818cf8', '#3b82f6', '#60a5fa', '#8b5cf6', '#a78bfa',
+    // Greens
+    '#10b981', '#34d399', '#059669', '#14b8a6', '#06b6d4',
+    // Yellows & Oranges
+    '#fbbf24', '#fcd34d', '#f59e0b', '#fb923c', '#f97316',
+    // Reds & Pinks
+    '#ef4444', '#f87171', '#ec4899', '#f472b6',
+    // Grays
+    '#0a0a0a', '#111111', '#1a1a1a', '#1f2937', '#374151', '#6b7280', '#9ca3af', '#d1d5db', '#f3f4f6', '#ffffff',
+  ];
+
+  return (
+    <div className="property-field">
+      <label className="property-label">{label}</label>
+      <div className="color-picker-container">
+        <div className="property-color-input">
+          <input
+            type="color"
+            className="property-color-picker"
+            value={value}
+            onChange={e => onChange(e.target.value)}
+          />
+          <input
+            type="text"
+            className="property-input"
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            placeholder="#000000"
+          />
+          <button
+            className="color-presets-toggle"
+            onClick={() => setShowPresets(!showPresets)}
+            title="Show color presets"
+          >
+            <span style={{ fontSize: '1rem' }}>🎨</span>
+          </button>
+        </div>
+        {showPresets && (
+          <div className="color-presets-grid">
+            {colorPresets.map((color) => (
+              <button
+                key={color}
+                className="color-preset"
+                style={{ backgroundColor: color }}
+                onClick={() => {
+                  onChange(color);
+                  setShowPresets(false);
+                }}
+                title={color}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // Theme Properties
 export function ThemeProperties({ theme, onChange }) {
   const presets = {
+    editor: {
+      name: 'Editor Style (Default)',
+      primaryColor: '#6366f1',
+      secondaryColor: '#818cf8',
+      backgroundColor: '#0a0a0a',
+      textColor: '#ffffff',
+      accentColor: '#10b981',
+      fontFamily: 'Inter, system-ui, sans-serif',
+      borderRadius: '8px'
+    },
     dark: {
+      name: 'Dark Gray',
       primaryColor: '#6366f1',
       secondaryColor: '#818cf8',
       backgroundColor: '#1f2937',
@@ -622,6 +697,7 @@ export function ThemeProperties({ theme, onChange }) {
       borderRadius: '8px'
     },
     light: {
+      name: 'Light',
       primaryColor: '#3b82f6',
       secondaryColor: '#60a5fa',
       backgroundColor: '#ffffff',
@@ -631,6 +707,7 @@ export function ThemeProperties({ theme, onChange }) {
       borderRadius: '8px'
     },
     cyber: {
+      name: 'Cyberpunk',
       primaryColor: '#8b5cf6',
       secondaryColor: '#a78bfa',
       backgroundColor: '#0f172a',
@@ -638,17 +715,51 @@ export function ThemeProperties({ theme, onChange }) {
       accentColor: '#06b6d4',
       fontFamily: '"Courier New", monospace',
       borderRadius: '4px'
+    },
+    forest: {
+      name: 'Forest',
+      primaryColor: '#059669',
+      secondaryColor: '#10b981',
+      backgroundColor: '#064e3b',
+      textColor: '#d1fae5',
+      accentColor: '#fbbf24',
+      fontFamily: 'Georgia, serif',
+      borderRadius: '12px'
+    },
+    sunset: {
+      name: 'Sunset',
+      primaryColor: '#f59e0b',
+      secondaryColor: '#fbbf24',
+      backgroundColor: '#7c2d12',
+      textColor: '#fff7ed',
+      accentColor: '#fb923c',
+      fontFamily: 'Inter, system-ui, sans-serif',
+      borderRadius: '16px'
     }
   };
 
   return (
     <>
       <div className="property-group">
-        <div className="property-group-title">Presets</div>
-        <div style={{ display: 'grid', gap: '0.5rem' }}>
-          <button className="btn-secondary" onClick={() => onChange(presets.dark)}>Dark</button>
-          <button className="btn-secondary" onClick={() => onChange(presets.light)}>Light</button>
-          <button className="btn-secondary" onClick={() => onChange(presets.cyber)}>Cyber</button>
+        <div className="property-group-title">Theme Presets</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+          {Object.entries(presets).map(([key, preset]) => (
+            <button
+              key={key}
+              className="theme-preset-button"
+              onClick={() => {
+                const { name, ...themeData } = preset;
+                onChange(themeData);
+              }}
+              style={{
+                background: `linear-gradient(135deg, ${preset.backgroundColor}, ${preset.primaryColor})`,
+                color: preset.textColor,
+                border: `2px solid ${preset.primaryColor}`,
+              }}
+            >
+              {preset.name}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -657,95 +768,35 @@ export function ThemeProperties({ theme, onChange }) {
       <div className="property-group">
         <div className="property-group-title">Colors</div>
 
-        <div className="property-field">
-          <label className="property-label">Primary Color</label>
-          <div className="property-color-input">
-            <input
-              type="color"
-              className="property-color-picker"
-              value={theme.primaryColor}
-              onChange={e => onChange({ ...theme, primaryColor: e.target.value })}
-            />
-            <input
-              type="text"
-              className="property-input"
-              value={theme.primaryColor}
-              onChange={e => onChange({ ...theme, primaryColor: e.target.value })}
-            />
-          </div>
-        </div>
+        <ColorPickerField
+          label="Primary Color"
+          value={theme.primaryColor}
+          onChange={color => onChange({ ...theme, primaryColor: color })}
+        />
 
-        <div className="property-field">
-          <label className="property-label">Secondary Color</label>
-          <div className="property-color-input">
-            <input
-              type="color"
-              className="property-color-picker"
-              value={theme.secondaryColor}
-              onChange={e => onChange({ ...theme, secondaryColor: e.target.value })}
-            />
-            <input
-              type="text"
-              className="property-input"
-              value={theme.secondaryColor}
-              onChange={e => onChange({ ...theme, secondaryColor: e.target.value })}
-            />
-          </div>
-        </div>
+        <ColorPickerField
+          label="Secondary Color"
+          value={theme.secondaryColor}
+          onChange={color => onChange({ ...theme, secondaryColor: color })}
+        />
 
-        <div className="property-field">
-          <label className="property-label">Background Color</label>
-          <div className="property-color-input">
-            <input
-              type="color"
-              className="property-color-picker"
-              value={theme.backgroundColor}
-              onChange={e => onChange({ ...theme, backgroundColor: e.target.value })}
-            />
-            <input
-              type="text"
-              className="property-input"
-              value={theme.backgroundColor}
-              onChange={e => onChange({ ...theme, backgroundColor: e.target.value })}
-            />
-          </div>
-        </div>
+        <ColorPickerField
+          label="Background Color"
+          value={theme.backgroundColor}
+          onChange={color => onChange({ ...theme, backgroundColor: color })}
+        />
 
-        <div className="property-field">
-          <label className="property-label">Text Color</label>
-          <div className="property-color-input">
-            <input
-              type="color"
-              className="property-color-picker"
-              value={theme.textColor}
-              onChange={e => onChange({ ...theme, textColor: e.target.value })}
-            />
-            <input
-              type="text"
-              className="property-input"
-              value={theme.textColor}
-              onChange={e => onChange({ ...theme, textColor: e.target.value })}
-            />
-          </div>
-        </div>
+        <ColorPickerField
+          label="Text Color"
+          value={theme.textColor}
+          onChange={color => onChange({ ...theme, textColor: color })}
+        />
 
-        <div className="property-field">
-          <label className="property-label">Accent Color</label>
-          <div className="property-color-input">
-            <input
-              type="color"
-              className="property-color-picker"
-              value={theme.accentColor}
-              onChange={e => onChange({ ...theme, accentColor: e.target.value })}
-            />
-            <input
-              type="text"
-              className="property-input"
-              value={theme.accentColor}
-              onChange={e => onChange({ ...theme, accentColor: e.target.value })}
-            />
-          </div>
-        </div>
+        <ColorPickerField
+          label="Accent Color"
+          value={theme.accentColor}
+          onChange={color => onChange({ ...theme, accentColor: color })}
+        />
       </div>
 
       <div className="divider" />
@@ -782,53 +833,160 @@ export function ThemeProperties({ theme, onChange }) {
   );
 }
 
-// Theme Canvas
+// Theme Canvas - Enhanced Preview
 export function ThemeCanvas({ theme }) {
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <h2 style={{ marginBottom: '2rem', fontSize: '1.5rem' }}>Theme Preview</h2>
+    <div style={{
+      width: '100%',
+      maxWidth: '900px',
+      margin: '0 auto',
+      padding: '2rem',
+      backgroundColor: theme.backgroundColor,
+      color: theme.textColor,
+      fontFamily: theme.fontFamily,
+      minHeight: '100%',
+    }}>
+      {/* Header */}
+      <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
+        <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', fontWeight: 700 }}>
+          My Idle Game
+        </h1>
+        <p style={{ opacity: 0.7, fontSize: '1rem' }}>
+          Live theme preview - See your colors in action!
+        </p>
+      </div>
 
-      <div
-        style={{
-          backgroundColor: theme.backgroundColor,
-          color: theme.textColor,
-          fontFamily: theme.fontFamily,
-          borderRadius: theme.borderRadius,
-          padding: '2rem',
-          border: '1px solid var(--border-primary)'
-        }}
-      >
-        <h3 style={{ marginBottom: '1rem' }}>Game Title</h3>
-        <p style={{ marginBottom: '1.5rem', opacity: 0.8 }}>This is how your game will look with these theme settings.</p>
-
-        <button
-          style={{
-            backgroundColor: theme.primaryColor,
-            color: theme.textColor,
-            border: 'none',
-            padding: '0.75rem 1.5rem',
-            borderRadius: theme.borderRadius,
-            fontFamily: theme.fontFamily,
-            fontWeight: 600,
-            cursor: 'pointer',
-            marginBottom: '1rem'
-          }}
-        >
-          Primary Button
-        </button>
-
-        <div
-          style={{
-            backgroundColor: theme.accentColor,
-            color: theme.backgroundColor,
-            padding: '1rem',
-            borderRadius: theme.borderRadius,
-            fontWeight: 600,
-            display: 'inline-block'
-          }}
-        >
-          Achievement Unlocked!
+      {/* Resource Display */}
+      <div style={{
+        background: `linear-gradient(135deg, ${theme.primaryColor}20, ${theme.secondaryColor}20)`,
+        border: `2px solid ${theme.primaryColor}`,
+        borderRadius: theme.borderRadius,
+        padding: '2rem',
+        marginBottom: '2rem',
+        textAlign: 'center'
+      }}>
+        <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🪙</div>
+        <div style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+          1,234,567
         </div>
+        <div style={{ opacity: 0.7, fontSize: '0.875rem' }}>Coins</div>
+        <div style={{ color: theme.accentColor, fontSize: '0.875rem', marginTop: '0.5rem' }}>
+          +100 per second
+        </div>
+      </div>
+
+      {/* Building Card */}
+      <div style={{
+        background: `${theme.backgroundColor}dd`,
+        border: `1px solid ${theme.primaryColor}40`,
+        borderRadius: theme.borderRadius,
+        padding: '1.5rem',
+        marginBottom: '1rem',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: '1rem'
+      }}>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flex: 1 }}>
+          <div style={{ fontSize: '2rem' }}>👆</div>
+          <div>
+            <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Auto-Clicker</div>
+            <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>Produces +1 coin/sec</div>
+            <div style={{ fontSize: '0.75rem', opacity: 0.5, marginTop: '0.25rem' }}>Owned: 10</div>
+          </div>
+        </div>
+        <button style={{
+          backgroundColor: theme.primaryColor,
+          color: theme.textColor,
+          border: 'none',
+          padding: '0.75rem 1.5rem',
+          borderRadius: theme.borderRadius,
+          fontFamily: theme.fontFamily,
+          fontWeight: 600,
+          cursor: 'pointer',
+          whiteSpace: 'nowrap',
+          boxShadow: `0 4px 12px ${theme.primaryColor}40`
+        }}>
+          Buy - 100 🪙
+        </button>
+      </div>
+
+      {/* Upgrade Card */}
+      <div style={{
+        background: `${theme.backgroundColor}dd`,
+        border: `1px solid ${theme.secondaryColor}40`,
+        borderRadius: theme.borderRadius,
+        padding: '1.5rem',
+        marginBottom: '1rem',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: '1rem'
+      }}>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flex: 1 }}>
+          <div style={{ fontSize: '2rem' }}>⬆️</div>
+          <div>
+            <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Better Clicks</div>
+            <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>Double click power</div>
+          </div>
+        </div>
+        <button style={{
+          backgroundColor: theme.secondaryColor,
+          color: theme.textColor,
+          border: 'none',
+          padding: '0.75rem 1.5rem',
+          borderRadius: theme.borderRadius,
+          fontFamily: theme.fontFamily,
+          fontWeight: 600,
+          cursor: 'pointer',
+          whiteSpace: 'nowrap',
+          boxShadow: `0 4px 12px ${theme.secondaryColor}40`
+        }}>
+          Buy - 500 🪙
+        </button>
+      </div>
+
+      {/* Achievement Notification */}
+      <div style={{
+        background: theme.accentColor,
+        color: theme.backgroundColor,
+        padding: '1rem 1.5rem',
+        borderRadius: theme.borderRadius,
+        fontWeight: 600,
+        textAlign: 'center',
+        boxShadow: `0 8px 24px ${theme.accentColor}60`,
+        marginBottom: '2rem'
+      }}>
+        🎉 Achievement Unlocked: First Click!
+      </div>
+
+      {/* Stats Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+        gap: '1rem'
+      }}>
+        {[
+          { label: 'Total Clicks', value: '1,234' },
+          { label: 'Buildings', value: '45' },
+          { label: 'Upgrades', value: '12' },
+          { label: 'Achievements', value: '8/20' },
+        ].map((stat, i) => (
+          <div key={i} style={{
+            background: `${theme.primaryColor}15`,
+            border: `1px solid ${theme.primaryColor}30`,
+            borderRadius: theme.borderRadius,
+            padding: '1rem',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' }}>
+              {stat.value}
+            </div>
+            <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>
+              {stat.label}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

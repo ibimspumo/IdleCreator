@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { CompressionUtils } from '../../utils/compression';
 import {
   BuildingProperties,
@@ -7,7 +7,7 @@ import {
   ThemeProperties,
   ThemeCanvas
 } from './PropertyPanels';
-import PixelArtEditor, { PixelArtUtils } from './PixelArtEditor';
+import PixelArtEditor from './PixelArtEditor';
 import {
   BuildingCardPreview,
   UpgradeCardPreview,
@@ -16,12 +16,28 @@ import {
 } from '../Preview/PreviewCards';
 import LogicEditor from '../LogicEditor/LogicEditor';
 import '../../styles/editor.css';
+import { GameDataContext } from './GameDataContext';
+import LogicToolbox from '../LogicEditor/LogicToolbox';
+import LogicNodeProperties from '../LogicEditor/LogicNodeProperties';
+
+import {
+  RenderIcon,
+  LayerSection,
+  GameMetaProperties,
+  ResourceProperties
+} from './GameEditorHelpers';
 
 function GameEditor({ onPreview, onBackToHome }) {
   const [gameData, setGameData] = useState(CompressionUtils.createTemplate());
-  const [selectedItem, setSelectedItem] = useState(null); // { type, id }
-  const [selectedTab, setSelectedTab] = useState('game'); // 'game', 'theme', 'logic'
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedTab, setSelectedTab] = useState('game');
   const [exportString, setExportString] = useState('');
+
+  const logicSetNodesRef = useRef(null);
+  const logicUpdateNodeDataRef = useRef(null);
+  const logicOnSaveRef = useRef(null);
+
+  const [selectedLogicNode, setSelectedLogicNode] = useState(null);
 
   const selectItem = (type, id) => {
     setSelectedItem({ type, id });
@@ -149,6 +165,9 @@ function GameEditor({ onPreview, onBackToHome }) {
 
   const handleExport = () => {
     console.log('Export clicked');
+    if (logicOnSaveRef.current) {
+      logicOnSaveRef.current();
+    }
     const validation = CompressionUtils.validate(gameData);
     if (!validation.valid) {
       alert(`Export failed: ${validation.error}`);
@@ -190,149 +209,154 @@ function GameEditor({ onPreview, onBackToHome }) {
   const selectedData = getSelectedData();
 
   return (
-    <div className="editor-container">
-      {/* Toolbar */}
-      <div className="editor-toolbar">
-        <div className="toolbar-left">
-          <div>
-            <div className="toolbar-title">{gameData.meta.title}</div>
-            <div className="toolbar-subtitle">Idle Game Creator</div>
+    <GameDataContext.Provider value={{ gameData, onGameDataChange: setGameData }}>
+      <div className={`editor-container ${selectedTab === 'logic' ? 'logic-view-active' : ''}`}>
+        {/* Toolbar */}
+        <div className="editor-toolbar">
+          <div className="toolbar-left">
+            <div>
+              <div className="toolbar-title">{gameData.meta.title}</div>
+              <div className="toolbar-subtitle">Idle Game Creator</div>
+            </div>
+          </div>
+
+          <div className="toolbar-center">
+            <button
+              className={`toolbar-tab ${selectedTab === 'game' ? 'active' : ''}`}
+              onClick={() => setSelectedTab('game')}
+            >
+              Game
+            </button>
+            <button
+              className={`toolbar-tab ${selectedTab === 'theme' ? 'active' : ''}`}
+              onClick={() => setSelectedTab('theme')}
+            >
+              Theme
+            </button>
+            <button
+              className={`toolbar-tab ${selectedTab === 'logic' ? 'active' : ''}`}
+              onClick={() => setSelectedTab('logic')}
+            >
+              Logic
+            </button>
+          </div>
+
+          <div className="toolbar-right">
+            <button className="toolbar-button" onClick={handlePreviewClick}>
+              Preview
+            </button>
+            <button className="toolbar-button primary" onClick={handleExport}>
+              Export
+            </button>
           </div>
         </div>
 
-        <div className="toolbar-center">
-          <button
-            className={`toolbar-tab ${selectedTab === 'game' ? 'active' : ''}`}
-            onClick={() => setSelectedTab('game')}
-          >
-            Game
-          </button>
-          <button
-            className={`toolbar-tab ${selectedTab === 'theme' ? 'active' : ''}`}
-            onClick={() => setSelectedTab('theme')}
-          >
-            Theme
-          </button>
-          <button
-            className={`toolbar-tab ${selectedTab === 'logic' ? 'active' : ''}`}
-            onClick={() => setSelectedTab('logic')}
-          >
-            Logic
-          </button>
-        </div>
+        {/* Left Sidebar - Layers */}
+        <div className="left-sidebar">
+          <div className="sidebar-header">
+            <span className="sidebar-title">Game Elements</span>
+          </div>
 
-        <div className="toolbar-right">
-          <button className="toolbar-button" onClick={handlePreviewClick}>
-            Preview
-          </button>
-          <button className="toolbar-button primary" onClick={handleExport}>
-            Export
-          </button>
-        </div>
-      </div>
+          <div className="sidebar-content">
+            {selectedTab === 'game' && (
+              <>
+                <LayerSection
+                  title="Resources"
+                  count={gameData.resources.length}
+                  items={gameData.resources}
+                  type="resource"
+                  selectedItem={selectedItem}
+                  onSelect={selectItem}
+                  onAdd={() => addItem('resource')}
+                  onDelete={deleteItem}
+                />
 
-      {/* Left Sidebar - Layers */}
-      <div className="left-sidebar">
-        <div className="sidebar-header">
-          <span className="sidebar-title">Game Elements</span>
-        </div>
+                <LayerSection
+                  title="Buildings"
+                  count={gameData.buildings.length}
+                  items={gameData.buildings}
+                  type="building"
+                  selectedItem={selectedItem}
+                  onSelect={selectItem}
+                  onAdd={() => addItem('building')}
+                  onDelete={deleteItem}
+                />
 
-        <div className="sidebar-content">
-          {selectedTab === 'game' && (
-            <>
-              <LayerSection
-                title="Resources"
-                count={gameData.resources.length}
-                items={gameData.resources}
-                type="resource"
-                selectedItem={selectedItem}
-                onSelect={selectItem}
-                onAdd={() => addItem('resource')}
-                onDelete={deleteItem}
+                <LayerSection
+                  title="Upgrades"
+                  count={gameData.upgrades.length}
+                  items={gameData.upgrades}
+                  type="upgrade"
+                  selectedItem={selectedItem}
+                  onSelect={selectItem}
+                  onAdd={() => addItem('upgrade')}
+                  onDelete={deleteItem}
+                />
+
+                <LayerSection
+                  title="Achievements"
+                  count={gameData.achievements.length}
+                  items={gameData.achievements}
+                  type="achievement"
+                  selectedItem={selectedItem}
+                  onSelect={selectItem}
+                  onAdd={() => addItem('achievement')}
+                  onDelete={deleteItem}
+                />
+              </>
+            )}
+
+            {selectedTab === 'logic' && (
+              <LogicToolbox
+                setNodesRef={logicSetNodesRef}
+                updateNodeDataRef={logicUpdateNodeDataRef}
               />
+            )}
+          </div>
 
-              <LayerSection
-                title="Buildings"
-                count={gameData.buildings.length}
-                items={gameData.buildings}
-                type="building"
-                selectedItem={selectedItem}
-                onSelect={selectItem}
-                onAdd={() => addItem('building')}
-                onDelete={deleteItem}
-              />
-
-              <LayerSection
-                title="Upgrades"
-                count={gameData.upgrades.length}
-                items={gameData.upgrades}
-                type="upgrade"
-                selectedItem={selectedItem}
-                onSelect={selectItem}
-                onAdd={() => addItem('upgrade')}
-                onDelete={deleteItem}
-              />
-
-              <LayerSection
-                title="Achievements"
-                count={gameData.achievements.length}
-                items={gameData.achievements}
-                type="achievement"
-                selectedItem={selectedItem}
-                onSelect={selectItem}
-                onAdd={() => addItem('achievement')}
-                onDelete={deleteItem}
-              />
-            </>
-          )}
-        </div>
-
-        {/* Back Button at bottom of sidebar */}
-        <div style={{ padding: '1rem', marginTop: 'auto', borderTop: '1px solid var(--border-primary)' }}>
-          <button
-            onClick={onBackToHome}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              background: 'var(--bg-tertiary)',
-              border: '1px solid var(--border-primary)',
-              borderRadius: '6px',
-              color: 'var(--text-secondary)',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
+          {/* Back Button at bottom of sidebar */}
+          <div style={{ padding: '1rem', marginTop: 'auto', borderTop: '1px solid var(--border-primary)' }}>
+            <button
+              onClick={onBackToHome}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--border-primary)',
+                borderRadius: '6px',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
   
-              fontWeight: 500,
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={e => {
-              e.target.style.background = 'var(--bg-hover)';
-              e.target.style.color = 'var(--text-primary)';
-            }}
-            onMouseLeave={e => {
-              e.target.style.background = 'var(--bg-tertiary)';
-              e.target.style.color = 'var(--text-secondary)';
-            }}
-          >
-            ← Back to Home
-          </button>
+                fontWeight: 500,
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={e => {
+                e.target.style.background = 'var(--bg-hover)';
+                e.target.style.color = 'var(--text-primary)';
+              }}
+              onMouseLeave={e => {
+                e.target.style.background = 'var(--bg-tertiary)';
+                e.target.style.color = 'var(--text-secondary)';
+              }}
+            >
+              ← Back to Home
+            </button>
+          </div>
         </div>
-      </div>
 
       {/* Center Canvas */}
       <div className="editor-canvas">
         {selectedTab === 'logic' ? (
-          <LogicEditor />
+          <LogicEditor
+            exposeSetNodes={logicSetNodesRef}
+            exposeUpdateNodeData={logicUpdateNodeDataRef}
+            exposeOnSave={logicOnSaveRef}
+            onNodeSelect={setSelectedLogicNode}
+          />
         ) : (
           <>
-            {selectedTab === 'game' && !selectedItem && (
-              <div className="canvas-empty">
-                <div className="canvas-empty-icon">←</div>
-                <div className="canvas-empty-text">Select an element to edit</div>
-                <div className="canvas-empty-hint">Click on any item in the sidebar</div>
-              </div>
-            )}
-
-            {selectedTab === 'game' && selectedItem && selectedData && (
+            {selectedTab === 'game' && selectedItem && selectedData && ( // Corrected conditional
               <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto', padding: '2rem' }}>
                 <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
                   <h2 style={{ fontSize: '1.125rem', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: '0.5rem' }}>
@@ -369,6 +393,15 @@ function GameEditor({ onPreview, onBackToHome }) {
                 )}
               </div>
             )}
+
+            {selectedTab === 'game' && !selectedItem && (
+              <div className="canvas-empty">
+                <div className="canvas-empty-icon">←</div>
+                <div className="canvas-empty-text">Select an element to edit</div>
+                <div className="canvas-empty-hint">Click on any item in the sidebar</div>
+              </div>
+            )}
+
 
             {selectedTab === 'theme' && (
               <ThemeCanvas theme={gameData.theme} onChange={theme => setGameData(prev => ({ ...prev, theme }))} />
@@ -408,6 +441,10 @@ function GameEditor({ onPreview, onBackToHome }) {
             </>
           )}
 
+          {selectedTab === 'logic' && selectedLogicNode && (
+            <LogicNodeProperties node={selectedLogicNode} updateNodeData={logicUpdateNodeDataRef.current} />
+          )}
+
           {selectedTab === 'theme' && (
             <ThemeProperties theme={gameData.theme} onChange={theme => setGameData(prev => ({ ...prev, theme }))} />
           )}
@@ -440,287 +477,8 @@ function GameEditor({ onPreview, onBackToHome }) {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-// Helper: Render Icon (Pixel Art or Emoji)
-function RenderIcon({ icon, size = 18 }) {
-  if (icon && icon.startsWith('8x8:')) {
-    const grid = PixelArtUtils.decompress(icon);
-    return (
-      <canvas
-        width={size}
-        height={size}
-        style={{ imageRendering: 'pixelated', display: 'block' }}
-        ref={canvas => {
-          if (canvas) {
-            const ctx = canvas.getContext('2d');
-            const ps = size / 8;
-            for (let y = 0; y < 8; y++) {
-              for (let x = 0; x < 8; x++) {
-                ctx.fillStyle = grid[y][x];
-                ctx.fillRect(x * ps, y * ps, ps, ps);
-              }
-            }
-          }
-        }}
-      />
-    );
-  }
-  return <span style={{ fontSize: `${size}px`, lineHeight: 1 }}>{icon || '🎨'}</span>;
-}
-
-// Layer Section Component
-function LayerSection({ title, count, items, type, selectedItem, onSelect, onAdd, onDelete }) {
-  const [collapsed, setCollapsed] = useState(false);
-
-  return (
-    <div className="sidebar-section">
-      <div className="section-header" onClick={() => setCollapsed(!collapsed)}>
-        <div className="section-header-left">
-          <span className={`section-icon ${collapsed ? 'collapsed' : ''}`}>▼</span>
-          <span className="section-label">{title}</span>
-        </div>
-        <div>
-          <span className="section-count">{count}</span>
-          <button className="sidebar-action" onClick={(e) => { e.stopPropagation(); onAdd(); }}>+</button>
-        </div>
       </div>
-
-      {!collapsed && (
-        <div className="section-items">
-          {items.map(item => (
-            <div
-              key={item.id}
-              className={`layer-item ${selectedItem?.type === type && selectedItem?.id === item.id ? 'selected' : ''}`}
-              onClick={() => onSelect(type, item.id)}
-            >
-              <span className="layer-icon">
-                <RenderIcon icon={item.icon} size={18} />
-              </span>
-              <div className="layer-info">
-                <div className="layer-name">{item.name}</div>
-                <div className="layer-id">{item.id}</div>
-              </div>
-              <div className="layer-actions">
-                <button className="layer-action" onClick={(e) => { e.stopPropagation(); onDelete(type, item.id); }}>🗑️</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Game Meta Properties
-function GameMetaProperties({ meta, onChange, prestige, onPrestigeChange }) {
-  return (
-    <>
-      <div className="property-group">
-        <div className="property-group-title">Game Info</div>
-
-        <div className="property-field">
-          <label className="property-label">Title</label>
-          <input
-            type="text"
-            className="property-input"
-            value={meta.title}
-            onChange={e => onChange('title', e.target.value)}
-          />
-        </div>
-
-        <div className="property-field">
-          <label className="property-label">Description</label>
-          <textarea
-            className="property-textarea"
-            value={meta.description}
-            onChange={e => onChange('description', e.target.value)}
-            rows={3}
-          />
-        </div>
-
-        <div className="property-field">
-          <label className="property-label">Author</label>
-          <input
-            type="text"
-            className="property-input"
-            value={meta.author}
-            onChange={e => onChange('author', e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="divider" />
-
-      <div className="property-group">
-        <div className="property-group-title">Prestige System</div>
-
-        <div className="property-checkbox">
-          <input
-            type="checkbox"
-            checked={prestige.enabled}
-            onChange={e => onPrestigeChange({ ...prestige, enabled: e.target.checked })}
-          />
-          <label className="property-label" style={{ marginBottom: 0 }}>Enable Prestige</label>
-        </div>
-
-        {prestige.enabled && (
-          <>
-            <div className="property-field">
-              <label className="property-label">Formula</label>
-              <select
-                className="property-select"
-                value={prestige.formula}
-                onChange={e => onPrestigeChange({ ...prestige, formula: e.target.value })}
-              >
-                <option value="sqrt">Square Root</option>
-                <option value="log">Logarithmic</option>
-                <option value="linear">Linear</option>
-              </select>
-            </div>
-
-            <div className="property-field">
-              <label className="property-label">Divisor</label>
-              <input
-                type="number"
-                className="property-input"
-                value={prestige.divisor}
-                onChange={e => onPrestigeChange({ ...prestige, divisor: parseFloat(e.target.value) })}
-              />
-              <div className="property-hint">Higher value = more resources needed</div>
-            </div>
-          </>
-        )}
-      </div>
-    </>
-  );
-}
-
-// Resource Properties
-function ResourceProperties({ data, onChange }) {
-  const [showPixelEditor, setShowPixelEditor] = useState(false);
-
-  const renderIcon = () => {
-    if (data.icon && data.icon.startsWith('8x8:')) {
-      const grid = PixelArtUtils.decompress(data.icon);
-      return (
-        <canvas
-          width={32}
-          height={32}
-          style={{ border: '1px solid var(--border-primary)', borderRadius: '4px', imageRendering: 'pixelated' }}
-          ref={canvas => {
-            if (canvas) {
-              const ctx = canvas.getContext('2d');
-              const ps = 4;
-              for (let y = 0; y < 8; y++) {
-                for (let x = 0; x < 8; x++) {
-                  ctx.fillStyle = grid[y][x];
-                  ctx.fillRect(x * ps, y * ps, ps, ps);
-                }
-              }
-            }
-          }}
-        />
-      );
-    }
-    return <span style={{ fontSize: '2rem' }}>{data.icon || '💎'}</span>;
-  };
-
-  return (
-    <>
-      <div className="property-group">
-        <div className="property-group-title">Resource</div>
-
-        <div className="property-field">
-          <label className="property-label">ID</label>
-          <input
-            type="text"
-            className="property-input"
-            value={data.id}
-            onChange={e => onChange({ id: e.target.value })}
-          />
-        </div>
-
-        <div className="property-field">
-          <label className="property-label">Name</label>
-          <input
-            type="text"
-            className="property-input"
-            value={data.name}
-            onChange={e => onChange({ name: e.target.value })}
-          />
-        </div>
-
-        <div className="property-field">
-          <label className="property-label">Icon</label>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <input
-              type="text"
-              className="property-input"
-              value={data.icon}
-              onChange={e => onChange({ icon: e.target.value })}
-              placeholder="💎 or use pixel art"
-              style={{ flex: 1 }}
-            />
-            <button
-              className="btn-secondary"
-              onClick={() => setShowPixelEditor(true)}
-              style={{ padding: '0.5rem 0.75rem', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}
-            >
-              Pixel Art
-            </button>
-          </div>
-          <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>Preview:</span>
-            {renderIcon()}
-          </div>
-        </div>
-
-        <div className="property-checkbox">
-          <input
-            type="checkbox"
-            checked={data.clickable}
-            onChange={e => onChange({ clickable: e.target.checked })}
-          />
-          <label className="property-label" style={{ marginBottom: 0 }}>Clickable (main resource)</label>
-        </div>
-
-        {data.clickable && (
-          <div className="property-field">
-            <label className="property-label">Click Amount</label>
-            <input
-              type="number"
-              className="property-input"
-              value={data.clickAmount}
-              onChange={e => onChange({ clickAmount: parseFloat(e.target.value) })}
-            />
-          </div>
-        )}
-
-        <div className="property-field">
-          <label className="property-label">Start Amount</label>
-          <input
-            type="number"
-            className="property-input"
-            value={data.startAmount}
-            onChange={e => onChange({ startAmount: parseFloat(e.target.value) })}
-          />
-        </div>
-      </div>
-
-      {showPixelEditor && (
-        <PixelArtEditor
-          value={data.icon}
-          onChange={icon => {
-            onChange({ icon });
-            setShowPixelEditor(false);
-          }}
-          onClose={() => setShowPixelEditor(false)}
-        />
-      )}
-    </>
+    </GameDataContext.Provider>
   );
 }
 

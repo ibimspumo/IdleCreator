@@ -538,6 +538,75 @@
   color: var(--text-tertiary);
 }
 
+/* Theme Preset Buttons */
+.theme-preset-button {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.theme-preset-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Color Picker with Presets */
+.color-picker-container {
+  position: relative;
+}
+
+.color-presets-toggle {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.color-presets-toggle:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-primary);
+}
+
+.color-presets-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  position: relative;
+  z-index: 100;
+}
+
+.color-preset {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 2px solid var(--border-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.color-preset:hover {
+  transform: scale(1.2);
+  border-color: var(--text-primary);
+  box-shadow: 0 0 8px currentColor;
+  z-index: 10;
+  position: relative;
+}
+
 /* Empty State */
 .empty-state {
   display: flex;
@@ -591,21 +660,17 @@
 }
 
 /* Logic Editor View Adjustments */
-.editor-container.logic-view {
+.editor-container.logic-view-active {
   grid-template-areas:
-    "toolbar"
-    "canvas";
-  grid-template-columns: 1fr;
+    "toolbar toolbar toolbar"
+    "left-sidebar canvas right-sidebar";
+  grid-template-columns: var(--sidebar-width) 1fr var(--sidebar-width);
   grid-template-rows: var(--toolbar-height) 1fr;
 }
 
-.logic-view .left-sidebar,
-.logic-view .right-sidebar {
-    display: none;
-}
-
-.logic-view .editor-canvas {
+.editor-container.logic-view-active .editor-canvas {
     grid-area: canvas;
     padding: 0;
+    height: 100%;
+    overflow: hidden;
 }
-
