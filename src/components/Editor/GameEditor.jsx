@@ -14,12 +14,13 @@ import {
   AchievementCardPreview,
   ResourcePreview
 } from '../Preview/PreviewCards';
+import LogicEditor from '../LogicEditor/LogicEditor';
 import '../../styles/editor.css';
 
 function GameEditor({ onPreview, onBackToHome }) {
   const [gameData, setGameData] = useState(CompressionUtils.createTemplate());
   const [selectedItem, setSelectedItem] = useState(null); // { type, id }
-  const [selectedTab, setSelectedTab] = useState('game'); // 'game', 'theme'
+  const [selectedTab, setSelectedTab] = useState('game'); // 'game', 'theme', 'logic'
   const [exportString, setExportString] = useState('');
 
   const selectItem = (type, id) => {
@@ -212,6 +213,12 @@ function GameEditor({ onPreview, onBackToHome }) {
           >
             Theme
           </button>
+          <button
+            className={`toolbar-tab ${selectedTab === 'logic' ? 'active' : ''}`}
+            onClick={() => setSelectedTab('logic')}
+          >
+            Logic
+          </button>
         </div>
 
         <div className="toolbar-right">
@@ -293,6 +300,7 @@ function GameEditor({ onPreview, onBackToHome }) {
               color: 'var(--text-secondary)',
               cursor: 'pointer',
               fontSize: '0.875rem',
+  
               fontWeight: 500,
               transition: 'all 0.2s'
             }}
@@ -312,54 +320,60 @@ function GameEditor({ onPreview, onBackToHome }) {
 
       {/* Center Canvas */}
       <div className="editor-canvas">
-        {selectedTab === 'game' && !selectedItem && (
-          <div className="canvas-empty">
-            <div className="canvas-empty-icon">←</div>
-            <div className="canvas-empty-text">Select an element to edit</div>
-            <div className="canvas-empty-hint">Click on any item in the sidebar</div>
-          </div>
-        )}
-
-        {selectedTab === 'game' && selectedItem && selectedData && (
-          <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto', padding: '2rem' }}>
-            <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
-              <h2 style={{ fontSize: '1.125rem', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: '0.5rem' }}>
-                Live Preview
-              </h2>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                How this {selectedItem.type} will appear in the game
-              </p>
-            </div>
-
-            {selectedItem.type === 'resource' && (
-              <ResourcePreview resource={selectedData} />
+        {selectedTab === 'logic' ? (
+          <LogicEditor />
+        ) : (
+          <>
+            {selectedTab === 'game' && !selectedItem && (
+              <div className="canvas-empty">
+                <div className="canvas-empty-icon">←</div>
+                <div className="canvas-empty-text">Select an element to edit</div>
+                <div className="canvas-empty-hint">Click on any item in the sidebar</div>
+              </div>
             )}
 
-            {selectedItem.type === 'building' && (
-              <BuildingCardPreview
-                building={selectedData}
-                resources={gameData.resources}
-              />
+            {selectedTab === 'game' && selectedItem && selectedData && (
+              <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto', padding: '2rem' }}>
+                <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+                  <h2 style={{ fontSize: '1.125rem', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: '0.5rem' }}>
+                    Live Preview
+                  </h2>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                    How this {selectedItem.type} will appear in the game
+                  </p>
+                </div>
+
+                {selectedItem.type === 'resource' && (
+                  <ResourcePreview resource={selectedData} />
+                )}
+
+                {selectedItem.type === 'building' && (
+                  <BuildingCardPreview
+                    building={selectedData}
+                    resources={gameData.resources}
+                  />
+                )}
+
+                {selectedItem.type === 'upgrade' && (
+                  <UpgradeCardPreview
+                    upgrade={selectedData}
+                    resources={gameData.resources}
+                  />
+                )}
+
+                {selectedItem.type === 'achievement' && (
+                  <AchievementCardPreview
+                    achievement={selectedData}
+                    resources={gameData.resources}
+                  />
+                )}
+              </div>
             )}
 
-            {selectedItem.type === 'upgrade' && (
-              <UpgradeCardPreview
-                upgrade={selectedData}
-                resources={gameData.resources}
-              />
+            {selectedTab === 'theme' && (
+              <ThemeCanvas theme={gameData.theme} onChange={theme => setGameData(prev => ({ ...prev, theme }))} />
             )}
-
-            {selectedItem.type === 'achievement' && (
-              <AchievementCardPreview
-                achievement={selectedData}
-                resources={gameData.resources}
-              />
-            )}
-          </div>
-        )}
-
-        {selectedTab === 'theme' && (
-          <ThemeCanvas theme={gameData.theme} onChange={theme => setGameData(prev => ({ ...prev, theme }))} />
+          </>
         )}
       </div>
 

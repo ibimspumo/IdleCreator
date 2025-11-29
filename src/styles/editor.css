@@ -589,3 +589,23 @@
   border-color: var(--warning);
   color: var(--warning);
 }
+
+/* Logic Editor View Adjustments */
+.editor-container.logic-view {
+  grid-template-areas:
+    "toolbar"
+    "canvas";
+  grid-template-columns: 1fr;
+  grid-template-rows: var(--toolbar-height) 1fr;
+}
+
+.logic-view .left-sidebar,
+.logic-view .right-sidebar {
+    display: none;
+}
+
+.logic-view .editor-canvas {
+    grid-area: canvas;
+    padding: 0;
+}
+
