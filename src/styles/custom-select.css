@@ -1,0 +1,119 @@
+/* Custom Select Component */
+.custom-select {
+  position: relative;
+  width: 100%;
+}
+
+.custom-select-trigger {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.custom-select-trigger:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-secondary);
+}
+
+.custom-select-trigger:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.custom-select-selected {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.custom-select-label {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.custom-select-placeholder {
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+.custom-select-arrow {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+/* Dropdown */
+.custom-select-dropdown {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  right: 0;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.custom-select-option {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.custom-select-option:hover {
+  background: var(--bg-hover);
+}
+
+.custom-select-option.selected {
+  background: var(--accent-primary);
+  color: white;
+}
+
+.custom-select-option.selected:hover {
+  background: var(--accent-hover);
+}
+
+/* Scrollbar for dropdown */
+.custom-select-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-select-dropdown::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+.custom-select-dropdown::-webkit-scrollbar-thumb {
+  background: var(--border-secondary);
+  border-radius: 3px;
+}
+
+.custom-select-dropdown::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}

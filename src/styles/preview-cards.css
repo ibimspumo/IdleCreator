@@ -1,0 +1,226 @@
+/* Preview Cards - Reusable Game Element Cards */
+
+.preview-card {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Header */
+.preview-card-header {
+  display: flex;
+  gap: 1rem;
+}
+
+.preview-card-header.horizontal {
+  flex-direction: row;
+  align-items: center;
+}
+
+.preview-card-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+}
+
+.preview-card-icon.small {
+  width: 48px;
+  height: 48px;
+}
+
+.preview-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.preview-card-info h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  color: var(--text-primary);
+}
+
+.preview-card-info p {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Stats Section */
+.preview-card-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+}
+
+.stat-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.stat-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+.stat-value {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cost-item,
+.production-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.effect-item {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  padding: 0.5rem;
+  background: var(--bg-tertiary);
+  border-left: 2px solid var(--accent-primary);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.requirement-item {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  padding: 0.5rem;
+  background: var(--bg-tertiary);
+  border-left: 2px solid var(--border-secondary);
+  border-radius: 4px;
+}
+
+.requirement-count {
+  color: var(--accent-primary);
+  font-weight: 600;
+}
+
+.empty-text {
+  color: var(--text-tertiary);
+  font-style: italic;
+  font-size: 0.8125rem;
+}
+
+/* Footer */
+.preview-card-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.preview-buy-button {
+  padding: 0.75rem 1.5rem;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: not-allowed;
+  opacity: 0.6;
+  transition: all 0.2s;
+}
+
+/* Resource Preview */
+.resource-preview {
+  padding: 1rem;
+  max-width: 300px;
+}
+
+.preview-resource-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.preview-resource-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+}
+
+.preview-resource-info {
+  flex: 1;
+}
+
+.preview-resource-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.preview-resource-amount {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.preview-clickable-badge {
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background: var(--accent-primary);
+  color: white;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Achievement specific */
+.achievement-card-preview {
+  max-width: 400px;
+}
+
+/* Building specific */
+.building-card-preview {
+  max-width: 500px;
+}
+
+/* Upgrade specific */
+.upgrade-card-preview {
+  max-width: 500px;
+}
