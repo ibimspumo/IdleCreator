@@ -9,8 +9,8 @@ export const EVENT_TYPES = {
   onClick: { label: 'On Main Resource Click' },
   afterXClicks: {
     label: 'After X Clicks',
-    component: ({ data, updateNodeData }) => {
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+    component: ({ id, data, updateNodeData }) => {
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
       return (
         <>
           <label>Click Count:</label>
@@ -25,8 +25,8 @@ export const EVENT_TYPES = {
   },
   afterXSeconds: {
     label: 'After X Seconds',
-    component: ({ data, updateNodeData }) => {
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+    component: ({ id, data, updateNodeData }) => {
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
       return (
         <>
           <label>Seconds:</label>
@@ -41,10 +41,10 @@ export const EVENT_TYPES = {
   },
   afterXResources: {
     label: 'After X Resources',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const resources = gameData?.resources || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
       return (
         <>
           <label>Resource:</label>
@@ -59,10 +59,10 @@ export const EVENT_TYPES = {
   },
   afterBoughtUpgrade: {
     label: 'After Bought Upgrade',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const upgrades = gameData?.upgrades || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
       return (
         <>
           <label>Upgrade:</label>
@@ -75,8 +75,8 @@ export const EVENT_TYPES = {
   },
   afterXBoughtUpgrades: {
     label: 'After X Bought Upgrades',
-    component: ({ data, updateNodeData }) => {
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+    component: ({ id, data, updateNodeData }) => {
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
       return (
         <>
           <label>Upgrade Count:</label>
@@ -87,10 +87,10 @@ export const EVENT_TYPES = {
   },
   afterXResourcesSpent: {
     label: 'After X Resources Spent',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const resources = gameData?.resources || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
       return (
         <>
           <label>Resource:</label>
@@ -106,8 +106,8 @@ export const EVENT_TYPES = {
   onPrestige: { label: 'On Prestige' },
   afterXBuildings: {
     label: 'After X Buildings',
-    component: ({ data, updateNodeData }) => {
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+    component: ({ id, data, updateNodeData }) => {
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
       return (
         <>
           <label>Building Count:</label>
@@ -118,10 +118,10 @@ export const EVENT_TYPES = {
   },
   afterBoughtBuilding: {
     label: 'After Bought Building',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const buildings = gameData?.buildings || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
       return (
         <>
           <label>Building:</label>
@@ -134,10 +134,10 @@ export const EVENT_TYPES = {
   },
   onAchievementUnlock: {
     label: 'On Achievement Unlock',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const achievements = gameData?.achievements || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
       return (
         <>
           <label>Achievement:</label>
@@ -150,8 +150,8 @@ export const EVENT_TYPES = {
   },
   afterXAchievements: {
     label: 'After X Achievements',
-    component: ({ data, updateNodeData }) => {
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+    component: ({ id, data, updateNodeData }) => {
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
       return (
         <>
           <label>Achievement Count:</label>
@@ -162,10 +162,10 @@ export const EVENT_TYPES = {
   },
   onResourceFull: {
     label: 'On Resource Full',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const resources = gameData?.resources || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
       return (
         <>
           <label>Resource:</label>
@@ -178,10 +178,10 @@ export const EVENT_TYPES = {
   },
   onResourceEmpty: {
     label: 'On Resource Empty',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const resources = gameData?.resources || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
       return (
         <>
           <label>Resource:</label>
@@ -194,10 +194,10 @@ export const EVENT_TYPES = {
   },
   afterXProduction: {
     label: 'After X Production',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const resources = gameData?.resources || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
       return (
         <>
           <label>Resource:</label>
@@ -212,10 +212,10 @@ export const EVENT_TYPES = {
   },
   onBuildingMaxed: {
     label: 'On Building Maxed',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const buildings = gameData?.buildings || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
       return (
         <>
           <label>Building:</label>
@@ -228,8 +228,8 @@ export const EVENT_TYPES = {
   },
   afterPlaytime: {
     label: 'After Playtime',
-    component: ({ data, updateNodeData }) => {
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+    component: ({ id, data, updateNodeData }) => {
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
       return (
         <>
           <label>Minutes:</label>
@@ -260,7 +260,7 @@ export function EventNode({ id, data, isConnectable, updateNodeData, selected })
           ))}
         </select>
         {EventComponent && (
-          <EventComponent data={data} updateNodeData={(field, value) => updateNodeData(id, { ...data, [field]: value })} />
+          <EventComponent id={id} data={data} updateNodeData={updateNodeData} />
         )}
       </div>
       <Handle type="source" position={Position.Right} isConnectable={isConnectable} />

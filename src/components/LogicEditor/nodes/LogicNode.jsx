@@ -5,8 +5,8 @@ import { NodeDataUpdater } from '../shared/NodeDataUpdater';
 export const LOGIC_TYPES = {
   delay: {
     label: 'Delay',
-    component: ({ data, updateNodeData }) => {
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+    component: ({ id, data, updateNodeData }) => {
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -18,8 +18,8 @@ export const LOGIC_TYPES = {
   },
   random: {
     label: 'Random',
-    component: ({ data, updateNodeData }) => {
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+    component: ({ id, data, updateNodeData }) => {
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -31,8 +31,8 @@ export const LOGIC_TYPES = {
   },
   loop: {
     label: 'Loop',
-    component: ({ data, updateNodeData }) => {
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+    component: ({ id, data, updateNodeData }) => {
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -44,8 +44,8 @@ export const LOGIC_TYPES = {
   },
   branch: {
     label: 'Branch',
-    component: ({ data, updateNodeData }) => {
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+    component: ({ id, data, updateNodeData }) => {
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -76,7 +76,7 @@ export function LogicNode({ id, data, isConnectable, updateNodeData, selected })
           ))}
         </select>
         {LogicComponent && (
-          <LogicComponent data={data} updateNodeData={(field, value) => updateNodeData(id, { ...data, [field]: value })} />
+          <LogicComponent id={id} data={data} updateNodeData={updateNodeData} />
         )}
       </div>
       <Handle type="source" position={Position.Right} isConnectable={isConnectable} />

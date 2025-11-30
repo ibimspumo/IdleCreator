@@ -16,6 +16,7 @@ import '../../styles/custom-nodes.css'; // Import for generic node styling
 
 import { nodeTypes, EVENT_TYPES, ACTION_TYPES } from './CustomNodes';
 import { GameDataContext } from '../Editor/GameDataContext'; // Global game data context
+import { generateCodePreview } from '../../utils/codePreviewGenerator';
 
 const getId = (type) => `${type}_${Date.now()}`;
 
@@ -46,6 +47,7 @@ function LogicEditorInner({
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNodeId, setSelectedNodeId] = useState(null); // Internal state for selected node
   const [saveStatus, setSaveStatus] = useState('saved'); // 'saved', 'unsaved', 'saving'
+  const [showCodePreview, setShowCodePreview] = useState(false); // Code preview toggle
   const saveTimeoutRef = useRef(null);
 
   // Function to update a node's data (e.g., dropdown selection, input change)
@@ -282,6 +284,11 @@ function LogicEditorInner({
     return types;
   }, [updateNodeData]);
 
+  // Generate code preview
+  const codePreview = useMemo(() => {
+    return generateCodePreview(nodes, edges, gameData);
+  }, [nodes, edges, gameData]);
+
   return (
     <div
       className="logic-editor-wrapper"
@@ -298,6 +305,34 @@ function LogicEditorInner({
           {saveStatus === 'saving' && 'Saving...'}
         </span>
       </div>
+
+      {/* Code Preview Toggle Button */}
+      <button
+        className="code-preview-toggle"
+        onClick={() => setShowCodePreview(!showCodePreview)}
+        title="Toggle code preview"
+      >
+        {showCodePreview ? '📊 Hide Code' : '💻 Show Code'}
+      </button>
+
+      {/* Code Preview Panel */}
+      {showCodePreview && (
+        <div className="code-preview-panel">
+          <div className="code-preview-header">
+            <h3>Code Preview</h3>
+            <button
+              className="code-preview-close"
+              onClick={() => setShowCodePreview(false)}
+              title="Close preview"
+            >
+              ✕
+            </button>
+          </div>
+          <pre className="code-preview-content">
+            <code dangerouslySetInnerHTML={{ __html: codePreview }} />
+          </pre>
+        </div>
+      )}
 
       {/* Node Actions for Selected Node */}
       {selectedNodeId && (() => {

@@ -6,10 +6,10 @@ import { NodeDataUpdater } from '../shared/NodeDataUpdater';
 export const CONDITION_TYPES = {
   ifResource: {
     label: 'If Resource',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const resources = gameData?.resources || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -33,10 +33,10 @@ export const CONDITION_TYPES = {
   },
   ifBuilding: {
     label: 'If Building',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const buildings = gameData?.buildings || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -60,10 +60,10 @@ export const CONDITION_TYPES = {
   },
   ifUpgradeOwned: {
     label: 'If Upgrade Owned',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const upgrades = gameData?.upgrades || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -77,10 +77,10 @@ export const CONDITION_TYPES = {
   },
   ifAchievementUnlocked: {
     label: 'If Achievement Unlocked',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const achievements = gameData?.achievements || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -94,10 +94,10 @@ export const CONDITION_TYPES = {
   },
   ifProductionRate: {
     label: 'If Production Rate',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const resources = gameData?.resources || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -120,8 +120,8 @@ export const CONDITION_TYPES = {
   },
   ifPrestigeLevel: {
     label: 'If Prestige Level',
-    component: ({ data, updateNodeData }) => {
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+    component: ({ id, data, updateNodeData }) => {
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -141,8 +141,8 @@ export const CONDITION_TYPES = {
   },
   ifPlaytime: {
     label: 'If Playtime',
-    component: ({ data, updateNodeData }) => {
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+    component: ({ id, data, updateNodeData }) => {
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -161,10 +161,10 @@ export const CONDITION_TYPES = {
   },
   ifBuildingOwned: {
     label: 'If Building Owned',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const buildings = gameData?.buildings || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -194,7 +194,7 @@ export function ConditionNode({ id, data, isConnectable, updateNodeData, selecte
           ))}
         </select>
         {ConditionComponent && (
-          <ConditionComponent data={data} updateNodeData={(field, value) => updateNodeData(id, { ...data, [field]: value })} />
+          <ConditionComponent id={id} data={data} updateNodeData={updateNodeData} />
         )}
       </div>
       <Handle

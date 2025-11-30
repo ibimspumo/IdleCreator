@@ -6,10 +6,10 @@ import { NodeDataUpdater } from '../shared/NodeDataUpdater';
 export const ACTION_TYPES = {
   addResource: {
     label: 'Add Resource',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const resources = gameData?.resources || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -25,10 +25,10 @@ export const ACTION_TYPES = {
   },
   removeResource: {
     label: 'Remove Resource',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const resources = gameData?.resources || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -44,10 +44,10 @@ export const ACTION_TYPES = {
   },
   setResource: {
     label: 'Set Resource',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const resources = gameData?.resources || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -63,10 +63,10 @@ export const ACTION_TYPES = {
   },
   multiplyResource: {
     label: 'Multiply Resource',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const resources = gameData?.resources || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -82,10 +82,10 @@ export const ACTION_TYPES = {
   },
   unlockUpgrade: {
     label: 'Unlock Upgrade',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const upgrades = gameData?.upgrades || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -99,10 +99,10 @@ export const ACTION_TYPES = {
   },
   unlockBuilding: {
     label: 'Unlock Building',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const buildings = gameData?.buildings || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -116,8 +116,8 @@ export const ACTION_TYPES = {
   },
   showNotification: {
     label: 'Show Notification',
-    component: ({ data, updateNodeData }) => {
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+    component: ({ id, data, updateNodeData }) => {
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -131,10 +131,10 @@ export const ACTION_TYPES = {
   },
   addProduction: {
     label: 'Add Production',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const resources = gameData?.resources || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -150,10 +150,10 @@ export const ACTION_TYPES = {
   },
   multiplyProduction: {
     label: 'Multiply Production',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const resources = gameData?.resources || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -172,10 +172,10 @@ export const ACTION_TYPES = {
   },
   unlockAchievement: {
     label: 'Unlock Achievement',
-    component: ({ data, updateNodeData }) => {
+    component: ({ id, data, updateNodeData }) => {
       const { gameData } = useContext(GameDataContext);
       const achievements = gameData?.achievements || [];
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -189,8 +189,8 @@ export const ACTION_TYPES = {
   },
   setClickPower: {
     label: 'Set Click Power',
-    component: ({ data, updateNodeData }) => {
-      const { handleChange } = NodeDataUpdater({ nodeId: data.id, data, onUpdate: updateNodeData });
+    component: ({ id, data, updateNodeData }) => {
+      const { handleChange } = NodeDataUpdater({ nodeId: id, data, onUpdate: updateNodeData });
 
       return (
         <>
@@ -218,7 +218,7 @@ export function ActionNode({ id, data, isConnectable, updateNodeData, selected }
           ))}
         </select>
         {ActionComponent && (
-          <ActionComponent data={data} updateNodeData={(field, value) => updateNodeData(id, { ...data, [field]: value })} />
+          <ActionComponent id={id} data={data} updateNodeData={updateNodeData} />
         )}
       </div>
       <Handle type="source" position={Position.Right} isConnectable={isConnectable} />
