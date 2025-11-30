@@ -17,6 +17,9 @@ function GamePlayer({ gameData }) {
   const { notification, showNotification } = useNotification();
   useGameLifecycle(gameData, setGameEngine, setPrestigeEngine, setGameState, forceUpdate);
 
+  if (!gameData) {
+    return <div className="loading">No game data provided...</div>;
+  }
 
   if (!gameEngine || !gameState) {
     return <div className="loading">Loading game...</div>;
@@ -57,11 +60,6 @@ function GamePlayer({ gameData }) {
       gameEngine.reset(false);
       showNotification('Progress reset', 'info');
     }
-  };
-
-  const showNotification = (message, type) => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 3000);
   };
 
   const clickResource = gameData.resources.find(r => r.clickable);
