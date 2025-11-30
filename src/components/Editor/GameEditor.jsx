@@ -1,12 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { CompressionUtils } from '../../utils/compression';
-import {
-  BuildingProperties,
-  UpgradeProperties,
-  AchievementProperties,
-  ThemeProperties,
-  ThemeCanvas
-} from './PropertyPanels';
+import { useGameData } from './hooks/useGameData'; // Import the new hook
+import { useGameIO } from './hooks/useGameIO'; // Import the new hook
+import { BuildingProperties } from './properties/BuildingProperties';
+import { UpgradeProperties } from './properties/UpgradeProperties';
+import { AchievementProperties } from './properties/AchievementProperties';
+import { ThemeProperties } from './properties/ThemeProperties';
+import { ThemeCanvas } from './ThemeCanvas';
 import PixelArtEditor from './PixelArtEditor';
 import {
   BuildingCardPreview,
@@ -28,11 +27,19 @@ import {
 } from './GameEditorHelpers';
 
 function GameEditor({ onPreview }) {
-  const [gameData, setGameData] = useState(CompressionUtils.createTemplate());
-  const [selectedItem, setSelectedItem] = useState(null);
+  const {
+    gameData,
+    setGameData,
+    selectedItem,
+    setSelectedItem,
+    selectItem,
+    addItem,
+    deleteItem,
+    updateMeta,
+    updateItem,
+  } = useGameData();
+
   const [selectedTab, setSelectedTab] = useState('game');
-  const [exportString, setExportString] = useState('');
-  const [importString, setImportString] = useState(''); // State to control import modal
 
   const logicSetNodesRef = useRef(null);
   const logicUpdateNodeDataRef = useRef(null);
@@ -40,173 +47,19 @@ function GameEditor({ onPreview }) {
 
   const [selectedLogicNode, setSelectedLogicNode] = useState(null);
 
-  const handleImportEditor = (compressedString) => {
-    const gameData = CompressionUtils.decompress(compressedString);
-
-    if (!gameData) {
-      alert('Import fehlgeschlagen: Ungültiger Code');
-      return;
-    }
-
-    const validation = CompressionUtils.validate(gameData);
-    if (!validation.valid) {
-      alert(`Import fehlgeschlagen: ${validation.error}`);
-      return;
-    }
-
-    setGameData(gameData);
-    setImportString(''); // Close the import modal
-    alert('Game erfolgreich importiert!');
-  };
-
-  const selectItem = (type, id) => {
-    setSelectedItem({ type, id });
-  };
-
-  const addItem = (type) => {
-    let newItem;
-    const timestamp = Date.now();
-
-    switch (type) {
-      case 'resource':
-        newItem = {
-          id: `resource_${timestamp}`,
-          name: 'New Resource',
-          icon: '💎',
-          clickable: false,
-          clickAmount: 1,
-          startAmount: 0
-        };
-        setGameData(prev => ({ ...prev, resources: [...prev.resources, newItem] }));
-        selectItem('resource', newItem.id);
-        break;
-
-      case 'building':
-        newItem = {
-          id: `building_${timestamp}`,
-          name: 'New Building',
-          description: 'Description...',
-          icon: '🏗️',
-          cost: [{ resourceId: gameData.resources[0]?.id || 'coins', baseAmount: 10 }],
-          costScaling: 1.15,
-          produces: [{ resourceId: gameData.resources[0]?.id || 'coins', amount: 1 }]
-        };
-        setGameData(prev => ({ ...prev, buildings: [...prev.buildings, newItem] }));
-        selectItem('building', newItem.id);
-        break;
-
-      case 'upgrade':
-        newItem = {
-          id: `upgrade_${timestamp}`,
-          name: 'New Upgrade',
-          description: 'Description...',
-          icon: '⬆️',
-          cost: [{ resourceId: gameData.resources[0]?.id || 'coins', amount: 100 }],
-          unlockRequirements: [],
-          effects: [{ type: 'multiply', target: 'production', value: 2 }]
-        };
-        setGameData(prev => ({ ...prev, upgrades: [...prev.upgrades, newItem] }));
-        selectItem('upgrade', newItem.id);
-        break;
-
-      case 'achievement':
-        newItem = {
-          id: `achievement_${timestamp}`,
-          name: 'New Achievement',
-          description: 'Description...',
-          icon: '🏆',
-          requirements: [{ type: 'resource', resourceId: gameData.resources[0]?.id || 'coins', amount: 100 }]
-        };
-        setGameData(prev => ({ ...prev, achievements: [...prev.achievements, newItem] }));
-        selectItem('achievement', newItem.id);
-        break;
-    }
-  };
-
-  const deleteItem = (type, id) => {
-    if (!confirm('Delete this item?')) return;
-
-    switch (type) {
-      case 'resource':
-        if (gameData.resources.length === 1) {
-          alert('You must have at least one resource!');
-          return;
-        }
-        setGameData(prev => ({ ...prev, resources: prev.resources.filter(r => r.id !== id) }));
-        break;
-      case 'building':
-        setGameData(prev => ({ ...prev, buildings: prev.buildings.filter(b => b.id !== id) }));
-        break;
-      case 'upgrade':
-        setGameData(prev => ({ ...prev, upgrades: prev.upgrades.filter(u => u.id !== id) }));
-        break;
-      case 'achievement':
-        setGameData(prev => ({ ...prev, achievements: prev.achievements.filter(a => a.id !== id) }));
-        break;
-    }
-
-    if (selectedItem?.type === type && selectedItem?.id === id) {
-      setSelectedItem(null);
-    }
-  };
-
-  const updateMeta = (field, value) => {
-    setGameData(prev => ({ ...prev, meta: { ...prev.meta, [field]: value } }));
-  };
-
-  const updateItem = (type, id, updates) => {
-    switch (type) {
-      case 'resource':
-        setGameData(prev => ({
-          ...prev,
-          resources: prev.resources.map(r => r.id === id ? { ...r, ...updates } : r)
-        }));
-        break;
-      case 'building':
-        setGameData(prev => ({
-          ...prev,
-          buildings: prev.buildings.map(b => b.id === id ? { ...b, ...updates } : b)
-        }));
-        break;
-      case 'upgrade':
-        setGameData(prev => ({
-          ...prev,
-          upgrades: prev.upgrades.map(u => u.id === id ? { ...u, ...updates } : u)
-        }));
-        break;
-      case 'achievement':
-        setGameData(prev => ({
-          ...prev,
-          achievements: prev.achievements.map(a => a.id === id ? { ...a, ...updates } : a)
-        }));
-        break;
-    }
-  };
-
-  const handleExport = () => {
-    console.log('Export clicked');
-    if (logicOnSaveRef.current) {
-      logicOnSaveRef.current();
-    }
-    const validation = CompressionUtils.validate(gameData);
-    if (!validation.valid) {
-      alert(`Export failed: ${validation.error}`);
-      return;
-    }
-
-    const compressed = CompressionUtils.compress(gameData);
-    console.log('Export string:', compressed?.substring(0, 50));
-    setExportString(compressed);
-  };
+  const {
+    exportString,
+    setExportString,
+    importString,
+    setImportString,
+    handleExport,
+    handleImportEditor,
+    handleCopyToClipboard,
+  } = useGameIO(gameData, setGameData, logicOnSaveRef);
 
   const handlePreviewClick = () => {
     console.log('Preview clicked', gameData);
     onPreview(gameData);
-  };
-
-  const handleCopyToClipboard = () => {
-    navigator.clipboard.writeText(exportString);
-    alert('Export code copied to clipboard!');
   };
 
   const getSelectedData = () => {

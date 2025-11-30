@@ -2,35 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { GameEngine } from '../../engine/GameEngine';
 import { PrestigeEngine } from '../../engine/PrestigeEngine';
 import { FormatUtils } from '../../utils/formatters';
-import { PixelArtUtils } from '../Editor/PixelArtEditor';
+import { RenderIcon } from '../Editor/shared/RenderIcon'; // Import shared RenderIcon
+import { useNotification } from './hooks/useNotification'; // Import useNotification hook
+import { useGameLifecycle } from './hooks/useGameLifecycle'; // Import useGameLifecycle hook
 import '../../styles/player.css';
-
-// Helper: Render icon (pixel art or emoji)
-function RenderIcon({ icon, size = 24 }) {
-  if (icon && icon.startsWith('8x8:')) {
-    const grid = PixelArtUtils.decompress(icon);
-    return (
-      <canvas
-        width={size}
-        height={size}
-        style={{ imageRendering: 'pixelated', display: 'inline-block', verticalAlign: 'middle' }}
-        ref={canvas => {
-          if (canvas) {
-            const ctx = canvas.getContext('2d');
-            const ps = size / 8;
-            for (let y = 0; y < 8; y++) {
-              for (let x = 0; x < 8; x++) {
-                ctx.fillStyle = grid[y][x];
-                ctx.fillRect(x * ps, y * ps, ps, ps);
-              }
-            }
-          }
-        }}
-      />
-    );
-  }
-  return <span style={{ fontSize: `${size}px`, lineHeight: 1, display: 'inline-block', verticalAlign: 'middle' }}>{icon || '📦'}</span>;
-}
 
 function GamePlayer({ gameData }) {
   const [gameEngine, setGameEngine] = useState(null);
@@ -38,42 +13,10 @@ function GamePlayer({ gameData }) {
   const [gameState, setGameState] = useState(null);
   const [, forceUpdate] = useState(0);
   const [activeSection, setActiveSection] = useState('buildings'); // buildings, upgrades, achievements, stats
-  const [notification, setNotification] = useState(null);
-  const saveIntervalRef = useRef(null);
 
-  // Initialize Game Engine
-  useEffect(() => {
-    const engine = new GameEngine(gameData);
-    const prestige = new PrestigeEngine(engine, gameData.prestige);
+  const { notification, showNotification } = useNotification();
+  useGameLifecycle(gameData, setGameEngine, setPrestigeEngine, setGameState, forceUpdate);
 
-    // Load saved state from localStorage
-    const savedState = localStorage.getItem(`game_${gameData.meta.title}`);
-    if (savedState) {
-      engine.importState(savedState);
-    }
-
-    engine.start();
-    setGameEngine(engine);
-    setPrestigeEngine(prestige);
-    setGameState(engine.gameState);
-
-    // Auto-save every 5 seconds
-    saveIntervalRef.current = setInterval(() => {
-      const state = engine.exportState();
-      localStorage.setItem(`game_${gameData.meta.title}`, state);
-    }, 5000);
-
-    // Force UI update every 100ms
-    const uiInterval = setInterval(() => {
-      forceUpdate(prev => prev + 1);
-    }, 100);
-
-    return () => {
-      engine.stop();
-      clearInterval(saveIntervalRef.current);
-      clearInterval(uiInterval);
-    };
-  }, [gameData]);
 
   if (!gameEngine || !gameState) {
     return <div className="loading">Loading game...</div>;

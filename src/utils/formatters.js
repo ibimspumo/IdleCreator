@@ -1,6 +1,6 @@
 /**
  * Formatter Utilities
- * Formatierung von Zahlen für bessere Lesbarkeit
+ * Formatting numbers for better readability
  */
 
 export const FormatUtils = {

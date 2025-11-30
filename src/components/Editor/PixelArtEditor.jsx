@@ -3,11 +3,11 @@ import '../../styles/pixel-editor.css';
 
 // Pixel Art Utilities
 export const PixelArtUtils = {
-  // Komprimiert ein 8x8 Grid zu einem String
+  // Compresses an 8x8 grid to a string
   compress(grid) {
     // Format: "8x8:palette|pixelData"
-    // palette: Farben getrennt durch ','
-    // pixelData: Index der Farbe für jedes Pixel (base36)
+    // palette: Colors separated by ','
+    // pixelData: Index of the color for each pixel (base36)
 
     const uniqueColors = [...new Set(grid.flat())];
     const palette = uniqueColors.join(',');
@@ -20,7 +20,7 @@ export const PixelArtUtils = {
     return `8x8:${palette}|${pixelData}`;
   },
 
-  // Dekomprimiert einen String zu einem 8x8 Grid
+  // Decompresses a string to an 8x8 grid
   decompress(compressed) {
     if (!compressed || !compressed.startsWith('8x8:')) {
       return this.createEmptyGrid();
@@ -48,12 +48,12 @@ export const PixelArtUtils = {
     }
   },
 
-  // Erstellt ein leeres Grid
+  // Creates an empty grid
   createEmptyGrid(color = '#000000') {
     return Array(8).fill(null).map(() => Array(8).fill(color));
   },
 
-  // Rendert Pixel Art zu Canvas (für Preview)
+  // Renders pixel art to canvas (for preview)
   renderToCanvas(grid, size = 32) {
     const canvas = document.createElement('canvas');
     canvas.width = size;
@@ -74,19 +74,19 @@ export const PixelArtUtils = {
 
   // Konvertiert zu Emoji-ähnlichem Unicode (optional)
   toEmoji(grid) {
-    // Für später: Könnte man ein custom emoji generieren
+    // For later: Could generate a custom emoji
     return '🎨';
   }
 };
 
-// Preset Farben
+// Preset Colors
 const DEFAULT_PALETTE = [
-  '#000000', // Schwarz
-  '#FFFFFF', // Weiß
-  '#FF0000', // Rot
-  '#00FF00', // Grün
-  '#0000FF', // Blau
-  '#FFFF00', // Gelb
+  '#000000', // Black
+  '#FFFFFF', // White
+  '#FF0000', // Red
+  '#00FF00', // Green
+  '#0000FF', // Blue
+  '#FFFF00', // Yellow
   '#FF00FF', // Magenta
   '#00FFFF', // Cyan
 ];
@@ -105,9 +105,9 @@ function PixelArtEditor({ value, onChange, onClose }) {
   const [isDrawing, setIsDrawing] = useState(false);
   const canvasRef = useRef(null);
 
-  const pixelSize = 32; // Größe eines Pixels in px
+  const pixelSize = 32; // Size of a pixel in px
 
-  // Zeichne Grid auf Canvas
+  // Draw grid on canvas
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -115,7 +115,7 @@ function PixelArtEditor({ value, onChange, onClose }) {
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Zeichne Pixels
+    // Draw Pixels
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         ctx.fillStyle = grid[y][x];
@@ -123,7 +123,7 @@ function PixelArtEditor({ value, onChange, onClose }) {
       }
     }
 
-    // Zeichne Grid Lines
+    // Draw Grid Lines
     ctx.strokeStyle = '#2a2a2a';
     ctx.lineWidth = 1;
     for (let i = 0; i <= 8; i++) {
@@ -211,7 +211,7 @@ function PixelArtEditor({ value, onChange, onClose }) {
   const handleInvert = () => {
     const newGrid = grid.map(row =>
       row.map(color => {
-        // Invertiere Farbe
+        // Invert color
         const hex = color.replace('#', '');
         const r = 255 - parseInt(hex.substr(0, 2), 16);
         const g = 255 - parseInt(hex.substr(2, 2), 16);
