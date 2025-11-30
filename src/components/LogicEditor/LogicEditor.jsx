@@ -81,7 +81,9 @@ function LogicEditorInner({
     showCodePreview,
     setShowCodePreview,
     toggleCodePreview,
-    codePreview
+    codePreview,
+    codeMode,
+    toggleCodeMode
   } = useCodePreview(nodes, edges, gameData);
 
   // Update selected node in parent when nodes change
@@ -150,8 +152,34 @@ function LogicEditorInner({
       </button>
 
       {showCodePreview && (
+        <button
+          className="code-mode-toggle"
+          onClick={toggleCodeMode}
+          title="Switch code mode"
+          style={{
+            position: 'absolute',
+            top: '1rem',
+            left: '13rem',
+            zIndex: 1000,
+            padding: '0.625rem 1rem',
+            background: codeMode === 'executable' ? '#4a9eff' : 'var(--accent-primary)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: '0.875rem',
+            boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)'
+          }}
+        >
+          {codeMode === 'executable' ? '⚙️ JS Code' : '📖 Readable'}
+        </button>
+      )}
+
+      {showCodePreview && (
         <CodePreviewPanel
           codePreview={codePreview}
+          codeMode={codeMode}
           onClose={() => setShowCodePreview(false)}
         />
       )}
