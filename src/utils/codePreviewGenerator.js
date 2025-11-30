@@ -55,7 +55,7 @@ export class CodePreviewGenerator {
     switch (node.type) {
       case 'event':
         lines.push(...this.generateEventNode(node, indent));
-        break;
+        return lines; // Events handle their own children
       case 'action':
         lines.push(...this.generateActionNode(node, indent));
         break;
@@ -70,8 +70,8 @@ export class CodePreviewGenerator {
         break;
     }
 
-    // Get children and continue traversal (except for condition/logic which handle themselves)
-    if (node.type !== 'condition' && node.type !== 'logic') {
+    // Get children and continue traversal (only for action and group nodes)
+    if (node.type === 'action' || node.type === 'group') {
       const children = this.getChildNodes(nodeId);
       children.forEach(childId => {
         lines.push(...this.generateFromNode(childId, context));
@@ -161,7 +161,7 @@ export class CodePreviewGenerator {
 
     switch (data.logicType) {
       case 'delay':
-        lines.push(`${indent}<span class="code-symbol">⏱</span> <span class="code-keyword">wait</span> <span class="code-number">${data.seconds || 0}</span> seconds`);
+        lines.push(`${indent}<span class="code-symbol">⏱</span> <span class="code-keyword">wait</span> <span class="code-number">${data.duration || 1}</span> seconds`);
         break;
       case 'random':
         lines.push(`${indent}<span class="code-symbol">🎲</span> random chance (<span class="code-number">${data.chance || 50}</span>%):`);
@@ -186,7 +186,7 @@ export class CodePreviewGenerator {
         return lines;
 
       case 'loop':
-        lines.push(`${indent}<span class="code-symbol">🔁</span> <span class="code-keyword">repeat</span> <span class="code-number">${data.iterations || 1}</span> times:`);
+        lines.push(`${indent}<span class="code-symbol">🔁</span> <span class="code-keyword">repeat</span> <span class="code-number">${data.repeatCount || 5}</span> times:`);
         this.indentLevel++;
         this.getChildNodes(node.id).forEach(childId => {
           lines.push(...this.generateFromNode(childId));
@@ -195,11 +195,22 @@ export class CodePreviewGenerator {
         return lines;
 
       case 'branch':
-        lines.push(`${indent}<span class="code-comment">// Branch (parallel execution)</span>`);
-        break;
+        lines.push(`${indent}<span class="code-symbol">🌳</span> <span class="code-keyword">branch</span> <span class="code-comment">(${data.outputCount || 3} parallel paths)</span>:`);
+        this.indentLevel++;
+        this.getChildNodes(node.id).forEach(childId => {
+          lines.push(...this.generateFromNode(childId));
+        });
+        this.indentLevel--;
+        return lines;
+
       case 'sequence':
-        lines.push(`${indent}<span class="code-comment">// Sequence</span>`);
-        break;
+        lines.push(`${indent}<span class="code-symbol">📝</span> <span class="code-keyword">sequence</span>:`);
+        this.indentLevel++;
+        this.getChildNodes(node.id).forEach(childId => {
+          lines.push(...this.generateFromNode(childId));
+        });
+        this.indentLevel--;
+        return lines;
     }
 
     this.getChildNodes(node.id).forEach(childId => {
@@ -213,30 +224,52 @@ export class CodePreviewGenerator {
     const type = data.eventType;
 
     switch (type) {
+      // Simple events (no parameters)
       case 'onGameStart':
         return 'game starts';
-      case 'onGameLoad':
-        return 'game loads';
-      case 'onResourceGain':
-        return `${this.getResourceName(data.resourceId)} is gained`;
-      case 'afterClicks':
-        return `player clicks ${data.count || 0} times`;
-      case 'afterResourceAmount':
-        return `${this.getResourceName(data.resourceId)} reaches ${data.amount || 0}`;
-      case 'onBuildingPurchase':
-        return `${this.getBuildingName(data.buildingId)} is purchased`;
-      case 'onUpgradePurchase':
-        return `${this.getUpgradeName(data.upgradeId)} is purchased`;
-      case 'onAchievementUnlock':
-        return `${this.getAchievementName(data.achievementId)} is unlocked`;
+      case 'onTick':
+        return 'every tick (10x per second)';
+      case 'onClick':
+        return 'player clicks main resource';
       case 'onPrestige':
         return 'player prestiges';
-      case 'everySecond':
-        return 'every second (tick)';
+
+      // Counter events (afterX...)
+      case 'afterXClicks':
+        return `player clicks <span class="code-number">${data.clickCount || 10}</span> times${data.repeat ? ' <span class="code-comment">(repeating)</span>' : ''}`;
+      case 'afterXSeconds':
+        return `<span class="code-number">${data.seconds || 10}</span> seconds pass${data.repeat ? ' <span class="code-comment">(repeating)</span>' : ''}`;
+      case 'afterXResources':
+        return `<span class="code-variable">${this.getResourceName(data.resourceId)}</span> reaches <span class="code-number">${data.amount || 100}</span>`;
+      case 'afterXBoughtUpgrades':
+        return `player buys <span class="code-number">${data.upgradeCount || 5}</span> upgrades total`;
+      case 'afterXResourcesSpent':
+        return `player spends <span class="code-number">${data.amountSpent || 1000}</span> <span class="code-variable">${this.getResourceName(data.resourceId)}</span>`;
+      case 'afterXBuildings':
+        return `player owns <span class="code-number">${data.buildingCount || 10}</span> buildings total`;
+      case 'afterXAchievements':
+        return `player unlocks <span class="code-number">${data.achievementCount || 5}</span> achievements`;
+      case 'afterXProduction':
+        return `<span class="code-variable">${this.getResourceName(data.resourceId)}</span> produces <span class="code-number">${data.totalProduced || 10000}</span> total`;
       case 'afterPlaytime':
-        return `${data.minutes || 0} minutes of playtime`;
+        return `player plays for <span class="code-number">${data.minutes || 60}</span> minutes`;
+
+      // Specific item events
+      case 'afterBoughtUpgrade':
+        return `player buys upgrade <span class="code-string">"${this.getUpgradeName(data.upgradeId)}"</span>`;
+      case 'afterBoughtBuilding':
+        return `player buys building <span class="code-string">"${this.getBuildingName(data.buildingId)}"</span>`;
+      case 'onAchievementUnlock':
+        return `achievement <span class="code-string">"${this.getAchievementName(data.achievementId)}"</span> unlocks`;
+      case 'onResourceFull':
+        return `<span class="code-variable">${this.getResourceName(data.resourceId)}</span> reaches maximum`;
+      case 'onResourceEmpty':
+        return `<span class="code-variable">${this.getResourceName(data.resourceId)}</span> reaches zero`;
+      case 'onBuildingMaxed':
+        return `building <span class="code-string">"${this.getBuildingName(data.buildingId)}"</span> reaches maximum`;
+
       default:
-        return type || 'unknown event';
+        return `<span class="code-error">${type || 'unknown event'}</span>`;
     }
   }
 
@@ -249,7 +282,7 @@ export class CodePreviewGenerator {
       case 'removeResource':
         return `<span class="code-keyword">remove</span> <span class="code-number">${data.amount || 0}</span> from <span class="code-variable">${this.getResourceName(data.resourceId)}</span>`;
       case 'setResource':
-        return `<span class="code-keyword">set</span> <span class="code-variable">${this.getResourceName(data.resourceId)}</span> to <span class="code-number">${data.amount || 0}</span>`;
+        return `<span class="code-keyword">set</span> <span class="code-variable">${this.getResourceName(data.resourceId)}</span> to <span class="code-number">${data.value || 0}</span>`;
       case 'multiplyResource':
         return `<span class="code-keyword">multiply</span> <span class="code-variable">${this.getResourceName(data.resourceId)}</span> by <span class="code-number">${data.multiplier || 1}x</span>`;
       case 'unlockUpgrade':
@@ -259,15 +292,15 @@ export class CodePreviewGenerator {
       case 'unlockAchievement':
         return `<span class="code-keyword">unlock achievement</span> <span class="code-string">"${this.getAchievementName(data.achievementId)}"</span>`;
       case 'showNotification':
-        return `<span class="code-keyword">show notification</span> <span class="code-string">"${this.escapeHtml(data.message || '')}"</span>`;
+        return `<span class="code-keyword">show notification</span> <span class="code-string">"${this.escapeHtml(data.message || 'Notification')}"</span> <span class="code-comment">(${data.duration || 3}s)</span>`;
       case 'addProduction':
-        return `<span class="code-keyword">add</span> <span class="code-number">${data.amount || 0}/s</span> production to <span class="code-variable">${this.getResourceName(data.resourceId)}</span>`;
+        return `<span class="code-keyword">add</span> <span class="code-number">${data.perSecond || 0}/s</span> production to <span class="code-variable">${this.getResourceName(data.resourceId)}</span>`;
       case 'multiplyProduction':
         return `<span class="code-keyword">multiply</span> <span class="code-variable">${this.getResourceName(data.resourceId)}</span> production by <span class="code-number">${data.multiplier || 1}x</span>`;
       case 'forcePrestige':
         return '<span class="code-keyword">force prestige</span>';
       case 'setClickPower':
-        return `<span class="code-keyword">set click power to</span> <span class="code-number">${data.amount || 1}</span>`;
+        return `<span class="code-keyword">set click power to</span> <span class="code-number">${data.clickAmount || 1}</span>`;
       default:
         return `<span class="code-error">${type || 'unknown action'}</span>`;
     }
@@ -275,25 +308,26 @@ export class CodePreviewGenerator {
 
   getConditionDescription(data) {
     const type = data.conditionType;
-    const comparison = this.getComparisonSymbol(data.comparison);
+    // Support both 'comparison' (old) and 'operator' (new)
+    const comparison = this.getComparisonSymbol(data.operator || data.comparison);
 
     switch (type) {
       case 'ifResource':
         return `<span class="code-variable">${this.getResourceName(data.resourceId)}</span> <span class="code-operator">${comparison}</span> <span class="code-number">${data.amount || 0}</span>`;
       case 'ifBuilding':
-        return `<span class="code-variable">${this.getBuildingName(data.buildingId)}</span> owned <span class="code-operator">${comparison}</span> <span class="code-number">${data.amount || 0}</span>`;
+        return `<span class="code-variable">${this.getBuildingName(data.buildingId)}</span> count <span class="code-operator">${comparison}</span> <span class="code-number">${data.count || 0}</span>`;
       case 'ifUpgradeOwned':
-        return `<span class="code-variable">${this.getUpgradeName(data.upgradeId)}</span> is owned`;
+        return `upgrade <span class="code-string">"${this.getUpgradeName(data.upgradeId)}"</span> is owned`;
       case 'ifAchievementUnlocked':
-        return `<span class="code-variable">${this.getAchievementName(data.achievementId)}</span> is unlocked`;
+        return `achievement <span class="code-string">"${this.getAchievementName(data.achievementId)}"</span> is unlocked`;
       case 'ifProductionRate':
-        return `<span class="code-variable">${this.getResourceName(data.resourceId)}</span> production <span class="code-operator">${comparison}</span> <span class="code-number">${data.amount || 0}/s</span>`;
+        return `<span class="code-variable">${this.getResourceName(data.resourceId)}</span> production <span class="code-operator">${comparison}</span> <span class="code-number">${data.perSecond || 0}/s</span>`;
       case 'ifPrestigeLevel':
         return `prestige level <span class="code-operator">${comparison}</span> <span class="code-number">${data.level || 0}</span>`;
       case 'ifPlaytime':
         return `playtime <span class="code-operator">${comparison}</span> <span class="code-number">${data.minutes || 0}</span> minutes`;
       case 'ifBuildingOwned':
-        return `<span class="code-variable">${this.getBuildingName(data.buildingId)}</span> is owned`;
+        return `building <span class="code-string">"${this.getBuildingName(data.buildingId)}"</span> is owned`;
       default:
         return `<span class="code-error">${type || 'unknown condition'}</span>`;
     }
