@@ -343,44 +343,74 @@ function GameEditor({ onPreview }) {
 
       {/* Center Canvas */}
       <div className="editor-canvas">
-        {selectedTab === 'logic' ? (
-          <LogicEditor
-            exposeSetNodes={logicSetNodesRef}
-            exposeUpdateNodeData={logicUpdateNodeDataRef}
-            exposeOnSave={logicOnSaveRef}
-            onNodeSelect={setSelectedLogicNode}
-          />
-        ) : (
+        {selectedTab === 'logic' && (
           <>
-            {selectedTab === 'game' && selectedItem && selectedData && ( // Corrected conditional
-              <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto', padding: '2rem' }}>
-                <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
-                  <h2 style={{ fontSize: '1.125rem', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: '0.5rem' }}>
-                    Live Preview
-                  </h2>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                    How this {selectedItem.type} will appear in the game
-                  </p>
-                </div>
+            <LogicEditor
+              exposeSetNodes={logicSetNodesRef}
+              exposeUpdateNodeData={logicUpdateNodeDataRef}
+              exposeOnSave={logicOnSaveRef}
+              onNodeSelect={setSelectedLogicNode}
+            />
+            {selectedLogicNode && (
+              <div className="properties-panel"> {/* Re-using properties-panel class for styling */}
+                <LogicNodeProperties node={selectedLogicNode} updateNodeData={logicUpdateNodeDataRef.current} />
+              </div>
+            )}
+          </>
+        )}
 
+        {selectedTab === 'game' && (
+          <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto', padding: '2rem' }}>
+            {!selectedItem && (
+              <div className="properties-panel" style={{ marginBottom: '2rem' }}>
+                <GameMetaProperties meta={gameData.meta} onChange={updateMeta} prestige={gameData.prestige} onPrestigeChange={prestige => setGameData(prev => ({ ...prev, prestige }))} />
+              </div>
+            )}
+
+            {selectedItem && selectedData && (
+              <div className="properties-panel" style={{ marginBottom: '2rem' }}>
+                {selectedItem.type === 'resource' && (
+                  <ResourceProperties data={selectedData} onChange={updates => updateItem('resource', selectedItem.id, updates)} />
+                )}
+
+                {selectedItem.type === 'building' && (
+                  <BuildingProperties data={selectedData} resources={gameData.resources} onChange={updates => updateItem('building', selectedItem.id, updates)} />
+                )}
+
+                {selectedItem.type === 'upgrade' && (
+                  <UpgradeProperties data={selectedData} resources={gameData.resources} buildings={gameData.buildings} onChange={updates => updateItem('upgrade', selectedItem.id, updates)} />
+                )}
+
+                {selectedItem.type === 'achievement' && (
+                  <AchievementProperties data={selectedData} resources={gameData.resources} buildings={gameData.buildings} onChange={updates => updateItem('achievement', selectedItem.id, updates)} />
+                )}
+              </div>
+            )}
+
+            {/* Live Preview (retained, but now below properties) */}
+            {selectedItem && selectedData && (
+              <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+                <h2 style={{ fontSize: '1.125rem', color: 'var(--text-tertiary)', fontWeight: 600, marginBottom: '0.5rem' }}>
+                  Live Preview
+                </h2>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                  How this {selectedItem.type} will appear in the game
+                </p>
                 {selectedItem.type === 'resource' && (
                   <ResourcePreview resource={selectedData} />
                 )}
-
                 {selectedItem.type === 'building' && (
                   <BuildingCardPreview
                     building={selectedData}
                     resources={gameData.resources}
                   />
                 )}
-
                 {selectedItem.type === 'upgrade' && (
                   <UpgradeCardPreview
                     upgrade={selectedData}
                     resources={gameData.resources}
                   />
                 )}
-
                 {selectedItem.type === 'achievement' && (
                   <AchievementCardPreview
                     achievement={selectedData}
@@ -390,62 +420,21 @@ function GameEditor({ onPreview }) {
               </div>
             )}
 
-            {selectedTab === 'game' && !selectedItem && (
-              <div className="canvas-empty">
-                <div className="canvas-empty-icon">←</div>
-                <div className="canvas-empty-text">Select an element to edit</div>
-                <div className="canvas-empty-hint">Click on any item in the sidebar</div>
-              </div>
-            )}
 
+          </div>
+        )}
 
-            {selectedTab === 'theme' && (
-              <ThemeCanvas theme={gameData.theme} onChange={theme => setGameData(prev => ({ ...prev, theme }))} />
-            )}
-          </>
+        {selectedTab === 'theme' && (
+          <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto', padding: '2rem' }}>
+            <div className="properties-panel" style={{ marginBottom: '2rem' }}>
+              <ThemeProperties theme={gameData.theme} onChange={theme => setGameData(prev => ({ ...prev, theme }))} />
+            </div>
+            <ThemeCanvas theme={gameData.theme} onChange={theme => setGameData(prev => ({ ...prev, theme }))} />
+          </div>
         )}
       </div>
 
-      {/* Right Sidebar - Properties */}
-      <div className="right-sidebar">
-        <div className="sidebar-header">
-          <span className="sidebar-title">Properties</span>
-        </div>
 
-        <div className="properties-panel">
-          {selectedTab === 'game' && !selectedItem && (
-            <GameMetaProperties meta={gameData.meta} onChange={updateMeta} prestige={gameData.prestige} onPrestigeChange={prestige => setGameData(prev => ({ ...prev, prestige }))} />
-          )}
-
-          {selectedTab === 'game' && selectedItem && selectedData && (
-            <>
-              {selectedItem.type === 'resource' && (
-                <ResourceProperties data={selectedData} onChange={updates => updateItem('resource', selectedItem.id, updates)} />
-              )}
-
-              {selectedItem.type === 'building' && (
-                <BuildingProperties data={selectedData} resources={gameData.resources} onChange={updates => updateItem('building', selectedItem.id, updates)} />
-              )}
-
-              {selectedItem.type === 'upgrade' && (
-                <UpgradeProperties data={selectedData} resources={gameData.resources} buildings={gameData.buildings} onChange={updates => updateItem('upgrade', selectedItem.id, updates)} />
-              )}
-
-              {selectedItem.type === 'achievement' && (
-                <AchievementProperties data={selectedData} resources={gameData.resources} buildings={gameData.buildings} onChange={updates => updateItem('achievement', selectedItem.id, updates)} />
-              )}
-            </>
-          )}
-
-          {selectedTab === 'logic' && selectedLogicNode && (
-            <LogicNodeProperties node={selectedLogicNode} updateNodeData={logicUpdateNodeDataRef.current} />
-          )}
-
-          {selectedTab === 'theme' && (
-            <ThemeProperties theme={gameData.theme} onChange={theme => setGameData(prev => ({ ...prev, theme }))} />
-          )}
-        </div>
-      </div>
 
       {/* Export Modal */}
       {exportString && (
