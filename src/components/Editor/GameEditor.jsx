@@ -25,6 +25,8 @@ import {
   GameMetaProperties,
   ResourceProperties
 } from './GameEditorHelpers';
+import WikiPage from '../WikiPage';
+import WikiSidebar from '../WikiSidebar';
 
 function GameEditor({ onPreview }) {
   const {
@@ -40,6 +42,7 @@ function GameEditor({ onPreview }) {
   } = useGameData();
 
   const [selectedTab, setSelectedTab] = useState('game');
+  const [selectedWikiArticle, setSelectedWikiArticle] = useState('introduction.md');
 
   const logicSetNodesRef = useRef(null);
   const logicUpdateNodeDataRef = useRef(null);
@@ -118,6 +121,13 @@ function GameEditor({ onPreview }) {
             >
               Settings
             </button>
+            <button
+              className={`toolbar-tab ${selectedTab === 'wiki' ? 'active' : ''}`}
+              onClick={() => setSelectedTab('wiki')}
+            >
+              Wiki
+            </button>
+
           </div>
 
           <div className="toolbar-right">
@@ -193,6 +203,10 @@ function GameEditor({ onPreview }) {
                 setNodesRef={logicSetNodesRef}
                 updateNodeDataRef={logicUpdateNodeDataRef}
               />
+            )}
+
+            {selectedTab === 'wiki' && (
+              <WikiSidebar onArticleSelect={setSelectedWikiArticle} selectedArticle={selectedWikiArticle} />
             )}
           </div>
 
@@ -293,6 +307,12 @@ function GameEditor({ onPreview }) {
             <div className="properties-panel" style={{ marginBottom: '2rem' }}>
               <GameMetaProperties meta={gameData.meta} onChange={updateMeta} prestige={gameData.prestige} onPrestigeChange={prestige => setGameData(prev => ({ ...prev, prestige }))} />
             </div>
+          </div>
+        )}
+
+        {selectedTab === 'wiki' && (
+          <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
+            <WikiPage markdownFileName={selectedWikiArticle} />
           </div>
         )}
       </div>

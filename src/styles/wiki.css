@@ -1,0 +1,128 @@
+.wiki-content {
+  padding: 2rem; /* Consistent with editor-canvas padding */
+  max-width: 800px;
+  margin: 20px auto; /* Keep auto margin for centering */
+  background-color: var(--bg-primary); /* Use primary background var */
+  border-radius: 8px; /* Consistent border-radius */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* Keep dark shadow */
+  color: var(--text-primary); /* Use primary text var */
+  line-height: 1.6; /* Good line spacing for readability */
+  font-family: inherit; /* Inherit font from body */
+}
+
+.wiki-content h1, .wiki-content h2, .wiki-content h3, .wiki-content h4, .wiki-content h5, .wiki-content h6 {
+  color: var(--accent-primary); /* Use accent color for headings */
+  margin-top: 2.5rem; /* More space above headings */
+  margin-bottom: 1rem; /* Consistent space below headings */
+  font-weight: 700; /* Bolder headings */
+  line-height: 1.2; /* Tighter line height for headings */
+}
+
+.wiki-content h1 { font-size: 2.5rem; }
+.wiki-content h2 { font-size: 2rem; }
+.wiki-content h3 { font-size: 1.75rem; }
+.wiki-content h4 { font-size: 1.5rem; }
+.wiki-content h5 { font-size: 1.25rem; }
+.wiki-content h6 { font-size: 1rem; }
+
+.wiki-content p {
+  margin-bottom: 1.25rem; /* More spacing below paragraphs */
+  color: var(--text-secondary); /* Use secondary text for paragraphs */
+}
+
+.wiki-content ul, .wiki-content ol {
+  margin-bottom: 1.25rem;
+  padding-left: 2rem; /* Indent lists */
+}
+
+.wiki-content li {
+  margin-bottom: 0.6rem; /* Spacing between list items */
+  color: var(--text-secondary);
+}
+
+.wiki-content strong {
+  color: var(--text-primary); /* Strong emphasis with primary text color */
+}
+
+.wiki-content em {
+  font-style: italic; /* Default italic for emphasis */
+}
+
+/* Code block styling (for react-syntax-highlighter) */
+.wiki-content pre {
+  background-color: var(--bg-secondary) !important; /* Use secondary background for code blocks */
+  padding: 1.5rem !important; /* More padding */
+  border-radius: 8px; /* Consistent border-radius */
+  overflow-x: auto;
+  margin-bottom: 2rem; /* More space below code blocks */
+  border: 1px solid var(--border-primary); /* Use primary border var */
+}
+
+.wiki-content pre code {
+  font-family: 'Fira Code', 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace; /* Prefer monospaced fonts */
+  font-size: 0.95rem; /* Slightly larger font size for code */
+  line-height: 1.5;
+  color: inherit !important; /* Inherit color from highlighter theme */
+}
+
+/* Inline code styling */
+.wiki-content code {
+  font-family: 'Fira Code', 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace; /* Prefer monospaced fonts */
+  background-color: var(--bg-tertiary); /* Use tertiary background for inline code */
+  padding: 0.2em 0.4em; /* Standard padding for inline code */
+  border-radius: 4px; /* Consistent border-radius */
+  font-size: 0.9em;
+  color: var(--accent-light); /* Lighter accent for inline code */
+}
+
+.wiki-content a {
+  color: var(--accent-primary); /* Use accent color for links */
+  text-decoration: none;
+}
+
+.wiki-content a:hover {
+  text-decoration: underline;
+}
+
+/* Styling for WikiSidebar */
+.wiki-sidebar {
+  width: 100%; /* Take full width of its container */
+  padding: 0; /* No padding here, handled by sidebar-content */
+}
+
+/* Styles for sidebar-header are already in editor.css and inherited */
+
+.wiki-article-list {
+  list-style: none; /* Remove default list bullets */
+  padding: 0;
+  margin: 0;
+}
+
+.wiki-article-list li {
+  margin-bottom: 0; /* Remove extra margin from general li rule */
+}
+
+.wiki-article-list button {
+  display: block; /* Make button take full width */
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1.5rem; /* Consistent with sidebar section padding */
+  background-color: transparent;
+  border: none;
+  color: var(--text-secondary); /* Default text secondary */
+  cursor: pointer;
+  font-size: 0.9rem; /* Slightly larger font */
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.wiki-article-list button:hover {
+  background-color: var(--bg-hover); /* Darker on hover */
+  color: var(--text-primary); /* Primary text on hover */
+}
+
+.wiki-article-list button.active {
+  background-color: var(--accent-primary); /* Active item highlight with accent */
+  color: var(--text-primary); /* Primary text for active */
+  font-weight: 600;
+}

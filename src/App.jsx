@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import GameEditor from './components/Editor/GameEditor';
 import GamePlayer from './components/Player/GamePlayer';
-
+// WikiPage is no longer rendered directly by App.jsx
 import './styles/app.css';
+// nav.css is no longer needed
+import './styles/wiki.css'; // Keep wiki.css for styling when rendered inside GameEditor
 
 function App() {
-  const [mode, setMode] = useState('editor'); // 'home', 'editor', 'player', 'import'
+  const [mode, setMode] = useState('editor'); // 'editor', 'player'
   const [currentGameData, setCurrentGameData] = useState(null);
 
 
@@ -15,16 +17,8 @@ function App() {
     setMode('player');
   };
 
-
-
-
-
   return (
     <div className="app">
-      {/* Home screen removed */}
-
-      {/* Import screen removed */}
-
       {mode === 'editor' && (
         <div className="editor-screen">
           <GameEditor onPreview={handlePreview} />
@@ -37,9 +31,15 @@ function App() {
           <GamePlayer gameData={currentGameData} />
         </div>
       )}
+
+      {/* Wiki is now handled within GameEditor */}
     </div>
   );
 }
+
+
+
+  
 
 
 
