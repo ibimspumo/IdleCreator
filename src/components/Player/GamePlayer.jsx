@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FormatUtils } from '../../utils/formatters';
 import { RenderIcon } from '../Editor/shared/RenderIcon';
 import { useNotification } from './hooks/useNotification';
 import { useGameLifecycle } from './hooks/useGameLifecycle';
+import { LogicDebug } from '../../utils/logicDebug';
 
 // Import panels
 import { BuildingsPanel } from './panels/BuildingsPanel';
@@ -25,6 +26,20 @@ function GamePlayer({ gameData }) {
 
   const { notification, showNotification } = useNotification();
   useGameLifecycle(gameData, setGameEngine, setPrestigeEngine, setGameState, forceUpdate);
+
+  // Expose engine for debugging
+  useEffect(() => {
+    if (gameEngine) {
+      window.gameEngine = gameEngine;
+      window.LogicDebug = LogicDebug;
+      console.log('🔧 Debug tools available:');
+      console.log('  - window.gameEngine (GameEngine instance)');
+      console.log('  - window.LogicDebug (Debug utilities)');
+      console.log('💡 Try: LogicDebug.visualizeFlow(gameEngine.gameData)');
+      console.log('💡 Try: LogicDebug.validateLogic(gameEngine.gameData)');
+      console.log('💡 Try: LogicDebug.enableDebugMode(gameEngine)');
+    }
+  }, [gameEngine]);
 
   if (!gameData) {
     return <div className="loading">No game data provided...</div>;
