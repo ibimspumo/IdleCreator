@@ -27,17 +27,37 @@ import {
   ResourceProperties
 } from './GameEditorHelpers';
 
-function GameEditor({ onPreview, onBackToHome }) {
+function GameEditor({ onPreview }) {
   const [gameData, setGameData] = useState(CompressionUtils.createTemplate());
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedTab, setSelectedTab] = useState('game');
   const [exportString, setExportString] = useState('');
+  const [importString, setImportString] = useState(''); // State to control import modal
 
   const logicSetNodesRef = useRef(null);
   const logicUpdateNodeDataRef = useRef(null);
   const logicOnSaveRef = useRef(null);
 
   const [selectedLogicNode, setSelectedLogicNode] = useState(null);
+
+  const handleImportEditor = (compressedString) => {
+    const gameData = CompressionUtils.decompress(compressedString);
+
+    if (!gameData) {
+      alert('Import fehlgeschlagen: Ungültiger Code');
+      return;
+    }
+
+    const validation = CompressionUtils.validate(gameData);
+    if (!validation.valid) {
+      alert(`Import fehlgeschlagen: ${validation.error}`);
+      return;
+    }
+
+    setGameData(gameData);
+    setImportString(''); // Close the import modal
+    alert('Game erfolgreich importiert!');
+  };
 
   const selectItem = (type, id) => {
     setSelectedItem({ type, id });
@@ -242,6 +262,9 @@ function GameEditor({ onPreview, onBackToHome }) {
           </div>
 
           <div className="toolbar-right">
+            <button className="toolbar-button" onClick={() => setImportString('open')}>
+              Import
+            </button>
             <button className="toolbar-button" onClick={handlePreviewClick}>
               Preview
             </button>
@@ -315,34 +338,7 @@ function GameEditor({ onPreview, onBackToHome }) {
           </div>
 
           {/* Back Button at bottom of sidebar */}
-          <div style={{ padding: '1rem', marginTop: 'auto', borderTop: '1px solid var(--border-primary)' }}>
-            <button
-              onClick={onBackToHome}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border-primary)',
-                borderRadius: '6px',
-                color: 'var(--text-secondary)',
-                cursor: 'pointer',
-                fontSize: '0.875rem',
-  
-                fontWeight: 500,
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={e => {
-                e.target.style.background = 'var(--bg-hover)';
-                e.target.style.color = 'var(--text-primary)';
-              }}
-              onMouseLeave={e => {
-                e.target.style.background = 'var(--bg-tertiary)';
-                e.target.style.color = 'var(--text-secondary)';
-              }}
-            >
-              ← Back to Home
-            </button>
-          </div>
+
         </div>
 
       {/* Center Canvas */}
@@ -473,6 +469,31 @@ function GameEditor({ onPreview, onBackToHome }) {
             </div>
             <div className="export-stats">
               Length: {exportString.length} characters
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import Modal */}
+      {importString && (
+        <div className="export-modal" onClick={() => setImportString('')}> {/* Reusing export-modal styles */}
+          <div className="export-content" onClick={e => e.stopPropagation()}> {/* Reusing export-content styles */}
+            <h2>Import Game</h2>
+            <p>Paste your game export code here:</p>
+            <textarea
+              className="export-textarea" // Reusing export-textarea styles
+              value={importString === 'open' ? '' : importString} // Clear content if just opened
+              onChange={(e) => setImportString(e.target.value)}
+              placeholder="Paste export code here..."
+              rows={10}
+            />
+            <div className="export-actions">
+              <button onClick={() => setImportString('')} className="btn-secondary">
+                Cancel
+              </button>
+              <button onClick={() => handleImportEditor(importString)} className="btn-primary">
+                Import Game
+              </button>
             </div>
           </div>
         </div>
