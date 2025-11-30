@@ -4,9 +4,9 @@
   height: 100vh;
   display: grid;
   grid-template-areas:
-    "toolbar toolbar toolbar"
-    "left-sidebar canvas right-sidebar";
-  grid-template-columns: var(--sidebar-width) 1fr var(--sidebar-width);
+    "toolbar toolbar"
+    "left-sidebar canvas";
+  grid-template-columns: var(--sidebar-width) 1fr;
   grid-template-rows: var(--toolbar-height) 1fr;
   background: var(--bg-primary);
   overflow: hidden;
@@ -662,9 +662,9 @@
 /* Logic Editor View Adjustments */
 .editor-container.logic-view-active {
   grid-template-areas:
-    "toolbar toolbar toolbar"
-    "left-sidebar canvas right-sidebar";
-  grid-template-columns: var(--sidebar-width) 1fr var(--sidebar-width);
+    "toolbar toolbar"
+    "left-sidebar canvas";
+  grid-template-columns: var(--sidebar-width) 1fr;
   grid-template-rows: var(--toolbar-height) 1fr;
 }
 
