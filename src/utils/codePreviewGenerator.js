@@ -1,7 +1,15 @@
 /**
- * Generates a human-readable code preview from logic nodes and edges
- * This converts the visual flow into pseudo-code for better understanding
+ * CodePreviewGenerator - Generates human-readable code preview from logic nodes
+ * Refactored to use modular generators and formatters
  */
+
+import { HtmlFormatter } from './codePreview/formatters/HtmlFormatter.js';
+import {
+  EventGenerator,
+  ActionGenerator,
+  ConditionGenerator,
+  LogicGenerator
+} from './codePreview/generators/index.js';
 
 export class CodePreviewGenerator {
   constructor(nodes, edges, gameData) {
@@ -21,6 +29,11 @@ export class CodePreviewGenerator {
 
     this.visitedNodes = new Set();
     this.indentLevel = 0;
+
+    // Initialize generators
+    this.eventGenerator = new EventGenerator(gameData);
+    this.actionGenerator = new ActionGenerator(gameData);
+    this.conditionGenerator = new ConditionGenerator(gameData);
   }
 
   generate() {
@@ -33,7 +46,7 @@ export class CodePreviewGenerator {
     const eventNodes = this.nodes.filter(node => node.type === 'event');
 
     if (eventNodes.length === 0) {
-      return '<span class="code-comment">// No logic defined yet</span>\n<span class="code-comment">// Add an Event node to get started!</span>';
+      return HtmlFormatter.comment('No logic defined yet') + '\n' + HtmlFormatter.comment('Add an Event node to get started!');
     }
 
     eventNodes.forEach((eventNode, index) => {
@@ -49,7 +62,7 @@ export class CodePreviewGenerator {
     if (!node) return [];
 
     const lines = [];
-    const indent = '  '.repeat(this.indentLevel);
+    const indent = HtmlFormatter.indent(this.indentLevel);
 
     // Generate code for this node
     switch (node.type) {
@@ -66,7 +79,7 @@ export class CodePreviewGenerator {
         lines.push(...this.generateLogicNode(node, indent));
         return lines; // Logic nodes handle their own children
       case 'group':
-        lines.push(`${indent}<span class="code-comment">// Group: ${this.escapeHtml(node.data.label || 'Unnamed')}</span>`);
+        lines.push(`${indent}${HtmlFormatter.comment(`Group: ${node.data.label || 'Unnamed'}`)}`);
         break;
     }
 
@@ -85,14 +98,14 @@ export class CodePreviewGenerator {
     const data = node.data;
     const lines = [];
 
-    let eventDescription = this.getEventDescription(data);
-    lines.push(`${indent}<span class="code-comment">// Event: ${this.escapeHtml(data.eventType || 'unknown')}</span>`);
-    lines.push(`${indent}<span class="code-keyword">when</span> ${eventDescription}:`);
+    const eventDescription = this.eventGenerator.generate(data);
+    lines.push(`${indent}${HtmlFormatter.comment(`Event: ${data.eventType || 'unknown'}`)}`);
+    lines.push(`${indent}${HtmlFormatter.keyword('when')} ${eventDescription}:`);
 
     this.indentLevel++;
     const children = this.getChildNodes(node.id);
     if (children.length === 0) {
-      lines.push(`${indent}  <span class="code-comment">// No actions defined</span>`);
+      lines.push(`${HtmlFormatter.indent(this.indentLevel)}${HtmlFormatter.comment('No actions defined')}`);
     } else {
       children.forEach(childId => {
         lines.push(...this.generateFromNode(childId));
@@ -105,23 +118,16 @@ export class CodePreviewGenerator {
 
   generateActionNode(node, indent) {
     const data = node.data;
-    const actionText = this.getActionDescription(data);
-    return [`${indent}<span class="code-symbol">→</span> ${actionText}`];
-  }
-
-  escapeHtml(text) {
-    if (typeof text !== 'string') return text;
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    const actionText = this.actionGenerator.generate(data);
+    return [`${indent}${HtmlFormatter.symbol('→')} ${actionText}`];
   }
 
   generateConditionNode(node, indent) {
     const data = node.data;
     const lines = [];
-    const conditionText = this.getConditionDescription(data);
+    const conditionText = this.conditionGenerator.generate(data);
 
-    lines.push(`${indent}<span class="code-keyword">if</span> ${conditionText}:`);
+    lines.push(`${indent}${HtmlFormatter.keyword('if')} ${conditionText}:`);
 
     // Get true and false branches
     const trueBranch = this.getChildNodes(node.id, 'true');
@@ -130,11 +136,11 @@ export class CodePreviewGenerator {
     // True branch
     this.indentLevel++;
     if (trueBranch.length === 0) {
-      lines.push(`${indent}  <span class="code-symbol code-true">✓</span> <span class="code-comment">// No actions</span>`);
+      lines.push(`${HtmlFormatter.indent(this.indentLevel)}${HtmlFormatter.symbol('✓', 'code-true')} ${HtmlFormatter.comment('No actions')}`);
     } else {
       trueBranch.forEach(childId => {
         const childLines = this.generateFromNode(childId);
-        childLines[0] = childLines[0].replace('<span class="code-symbol">→</span>', '<span class="code-symbol code-true">✓</span>');
+        childLines[0] = childLines[0].replace(HtmlFormatter.symbol('→'), HtmlFormatter.symbol('✓', 'code-true'));
         lines.push(...childLines);
       });
     }
@@ -142,11 +148,11 @@ export class CodePreviewGenerator {
 
     // False branch
     if (falseBranch.length > 0) {
-      lines.push(`${indent}<span class="code-keyword">else</span>:`);
+      lines.push(`${indent}${HtmlFormatter.keyword('else')}:`);
       this.indentLevel++;
       falseBranch.forEach(childId => {
         const childLines = this.generateFromNode(childId);
-        childLines[0] = childLines[0].replace('<span class="code-symbol">→</span>', '<span class="code-symbol code-false">✗</span>');
+        childLines[0] = childLines[0].replace(HtmlFormatter.symbol('→'), HtmlFormatter.symbol('✗', 'code-false'));
         lines.push(...childLines);
       });
       this.indentLevel--;
@@ -159,60 +165,43 @@ export class CodePreviewGenerator {
     const data = node.data;
     const lines = [];
 
-    switch (data.logicType) {
-      case 'delay':
-        lines.push(`${indent}<span class="code-symbol">⏱</span> <span class="code-keyword">wait</span> <span class="code-number">${data.duration || 1}</span> seconds`);
-        break;
-      case 'random':
-        lines.push(`${indent}<span class="code-symbol">🎲</span> random chance (<span class="code-number">${data.chance || 50}</span>%):`);
+    const result = LogicGenerator.generate(data);
+    lines.push(`${indent}${result.line}`);
+
+    if (result.type === 'branching') {
+      // Handle branching logic (random)
+      this.indentLevel++;
+      const successBranch = this.getChildNodes(node.id, 'true');
+      const failBranch = this.getChildNodes(node.id, 'false');
+
+      if (successBranch.length > 0) {
+        lines.push(`${HtmlFormatter.indent(this.indentLevel)}${result.branchLabels.true}`);
         this.indentLevel++;
-        const successBranch = this.getChildNodes(node.id, 'true');
-        const failBranch = this.getChildNodes(node.id, 'false');
-
-        if (successBranch.length > 0) {
-          lines.push(`${indent}  <span class="code-symbol code-true">✓</span> <span class="code-keyword">on success</span>:`);
-          this.indentLevel++;
-          successBranch.forEach(childId => lines.push(...this.generateFromNode(childId)));
-          this.indentLevel--;
-        }
-
-        if (failBranch.length > 0) {
-          lines.push(`${indent}  <span class="code-symbol code-false">✗</span> <span class="code-keyword">on failure</span>:`);
-          this.indentLevel++;
-          failBranch.forEach(childId => lines.push(...this.generateFromNode(childId)));
-          this.indentLevel--;
-        }
+        successBranch.forEach(childId => lines.push(...this.generateFromNode(childId)));
         this.indentLevel--;
-        return lines;
+      }
 
-      case 'loop':
-        lines.push(`${indent}<span class="code-symbol">🔁</span> <span class="code-keyword">repeat</span> <span class="code-number">${data.repeatCount || 5}</span> times:`);
+      if (failBranch.length > 0) {
+        lines.push(`${HtmlFormatter.indent(this.indentLevel)}${result.branchLabels.false}`);
         this.indentLevel++;
-        this.getChildNodes(node.id).forEach(childId => {
-          lines.push(...this.generateFromNode(childId));
-        });
+        failBranch.forEach(childId => lines.push(...this.generateFromNode(childId)));
         this.indentLevel--;
-        return lines;
-
-      case 'branch':
-        lines.push(`${indent}<span class="code-symbol">🌳</span> <span class="code-keyword">branch</span> <span class="code-comment">(${data.outputCount || 3} parallel paths)</span>:`);
-        this.indentLevel++;
-        this.getChildNodes(node.id).forEach(childId => {
-          lines.push(...this.generateFromNode(childId));
-        });
-        this.indentLevel--;
-        return lines;
-
-      case 'sequence':
-        lines.push(`${indent}<span class="code-symbol">📝</span> <span class="code-keyword">sequence</span>:`);
-        this.indentLevel++;
-        this.getChildNodes(node.id).forEach(childId => {
-          lines.push(...this.generateFromNode(childId));
-        });
-        this.indentLevel--;
-        return lines;
+      }
+      this.indentLevel--;
+      return lines;
     }
 
+    if (result.type === 'container') {
+      // Handle container logic (loop, branch, sequence)
+      this.indentLevel++;
+      this.getChildNodes(node.id).forEach(childId => {
+        lines.push(...this.generateFromNode(childId));
+      });
+      this.indentLevel--;
+      return lines;
+    }
+
+    // Simple logic (delay)
     this.getChildNodes(node.id).forEach(childId => {
       lines.push(...this.generateFromNode(childId));
     });
@@ -220,160 +209,11 @@ export class CodePreviewGenerator {
     return lines;
   }
 
-  getEventDescription(data) {
-    const type = data.eventType;
-
-    switch (type) {
-      // Simple events (no parameters)
-      case 'onGameStart':
-        return 'game starts';
-      case 'onTick':
-        return 'every tick (10x per second)';
-      case 'onClick':
-        return 'player clicks main resource';
-      case 'onPrestige':
-        return 'player prestiges';
-
-      // Counter events (afterX...)
-      case 'afterXClicks':
-        return `player clicks <span class="code-number">${data.clickCount || 10}</span> times${data.repeat ? ' <span class="code-comment">(repeating)</span>' : ''}`;
-      case 'afterXSeconds':
-        return `<span class="code-number">${data.seconds || 10}</span> seconds pass${data.repeat ? ' <span class="code-comment">(repeating)</span>' : ''}`;
-      case 'afterXResources':
-        return `<span class="code-variable">${this.getResourceName(data.resourceId)}</span> reaches <span class="code-number">${data.amount || 100}</span>`;
-      case 'afterXBoughtUpgrades':
-        return `player buys <span class="code-number">${data.upgradeCount || 5}</span> upgrades total`;
-      case 'afterXResourcesSpent':
-        return `player spends <span class="code-number">${data.amountSpent || 1000}</span> <span class="code-variable">${this.getResourceName(data.resourceId)}</span>`;
-      case 'afterXBuildings':
-        return `player owns <span class="code-number">${data.buildingCount || 10}</span> buildings total`;
-      case 'afterXAchievements':
-        return `player unlocks <span class="code-number">${data.achievementCount || 5}</span> achievements`;
-      case 'afterXProduction':
-        return `<span class="code-variable">${this.getResourceName(data.resourceId)}</span> produces <span class="code-number">${data.totalProduced || 10000}</span> total`;
-      case 'afterPlaytime':
-        return `player plays for <span class="code-number">${data.minutes || 60}</span> minutes`;
-
-      // Specific item events
-      case 'afterBoughtUpgrade':
-        return `player buys upgrade <span class="code-string">"${this.getUpgradeName(data.upgradeId)}"</span>`;
-      case 'afterBoughtBuilding':
-        return `player buys building <span class="code-string">"${this.getBuildingName(data.buildingId)}"</span>`;
-      case 'onAchievementUnlock':
-        return `achievement <span class="code-string">"${this.getAchievementName(data.achievementId)}"</span> unlocks`;
-      case 'onResourceFull':
-        return `<span class="code-variable">${this.getResourceName(data.resourceId)}</span> reaches maximum`;
-      case 'onResourceEmpty':
-        return `<span class="code-variable">${this.getResourceName(data.resourceId)}</span> reaches zero`;
-      case 'onBuildingMaxed':
-        return `building <span class="code-string">"${this.getBuildingName(data.buildingId)}"</span> reaches maximum`;
-
-      default:
-        return `<span class="code-error">${type || 'unknown event'}</span>`;
-    }
-  }
-
-  getActionDescription(data) {
-    const type = data.actionType;
-
-    switch (type) {
-      case 'addResource':
-        return `<span class="code-keyword">add</span> <span class="code-number">${data.amount || 0}</span> to <span class="code-variable">${this.getResourceName(data.resourceId)}</span>`;
-      case 'removeResource':
-        return `<span class="code-keyword">remove</span> <span class="code-number">${data.amount || 0}</span> from <span class="code-variable">${this.getResourceName(data.resourceId)}</span>`;
-      case 'setResource':
-        return `<span class="code-keyword">set</span> <span class="code-variable">${this.getResourceName(data.resourceId)}</span> to <span class="code-number">${data.value || 0}</span>`;
-      case 'multiplyResource':
-        return `<span class="code-keyword">multiply</span> <span class="code-variable">${this.getResourceName(data.resourceId)}</span> by <span class="code-number">${data.multiplier || 1}x</span>`;
-      case 'unlockUpgrade':
-        return `<span class="code-keyword">unlock upgrade</span> <span class="code-string">"${this.getUpgradeName(data.upgradeId)}"</span>`;
-      case 'unlockBuilding':
-        return `<span class="code-keyword">unlock building</span> <span class="code-string">"${this.getBuildingName(data.buildingId)}"</span>`;
-      case 'unlockAchievement':
-        return `<span class="code-keyword">unlock achievement</span> <span class="code-string">"${this.getAchievementName(data.achievementId)}"</span>`;
-      case 'showNotification':
-        return `<span class="code-keyword">show notification</span> <span class="code-string">"${this.escapeHtml(data.message || 'Notification')}"</span> <span class="code-comment">(${data.duration || 3}s)</span>`;
-      case 'addProduction':
-        return `<span class="code-keyword">add</span> <span class="code-number">${data.perSecond || 0}/s</span> production to <span class="code-variable">${this.getResourceName(data.resourceId)}</span>`;
-      case 'multiplyProduction':
-        return `<span class="code-keyword">multiply</span> <span class="code-variable">${this.getResourceName(data.resourceId)}</span> production by <span class="code-number">${data.multiplier || 1}x</span>`;
-      case 'forcePrestige':
-        return '<span class="code-keyword">force prestige</span>';
-      case 'setClickPower':
-        return `<span class="code-keyword">set click power to</span> <span class="code-number">${data.clickAmount || 1}</span>`;
-      default:
-        return `<span class="code-error">${type || 'unknown action'}</span>`;
-    }
-  }
-
-  getConditionDescription(data) {
-    const type = data.conditionType;
-    // Support both 'comparison' (old) and 'operator' (new)
-    const comparison = this.getComparisonSymbol(data.operator || data.comparison);
-
-    switch (type) {
-      case 'ifResource':
-        return `<span class="code-variable">${this.getResourceName(data.resourceId)}</span> <span class="code-operator">${comparison}</span> <span class="code-number">${data.amount || 0}</span>`;
-      case 'ifBuilding':
-        return `<span class="code-variable">${this.getBuildingName(data.buildingId)}</span> count <span class="code-operator">${comparison}</span> <span class="code-number">${data.count || 0}</span>`;
-      case 'ifUpgradeOwned':
-        return `upgrade <span class="code-string">"${this.getUpgradeName(data.upgradeId)}"</span> is owned`;
-      case 'ifAchievementUnlocked':
-        return `achievement <span class="code-string">"${this.getAchievementName(data.achievementId)}"</span> is unlocked`;
-      case 'ifProductionRate':
-        return `<span class="code-variable">${this.getResourceName(data.resourceId)}</span> production <span class="code-operator">${comparison}</span> <span class="code-number">${data.perSecond || 0}/s</span>`;
-      case 'ifPrestigeLevel':
-        return `prestige level <span class="code-operator">${comparison}</span> <span class="code-number">${data.level || 0}</span>`;
-      case 'ifPlaytime':
-        return `playtime <span class="code-operator">${comparison}</span> <span class="code-number">${data.minutes || 0}</span> minutes`;
-      case 'ifBuildingOwned':
-        return `building <span class="code-string">"${this.getBuildingName(data.buildingId)}"</span> is owned`;
-      default:
-        return `<span class="code-error">${type || 'unknown condition'}</span>`;
-    }
-  }
-
-  getComparisonSymbol(comparison) {
-    switch (comparison) {
-      case 'greater': return '>';
-      case 'greaterEqual': return '≥';
-      case 'less': return '<';
-      case 'lessEqual': return '≤';
-      case 'equal': return '=';
-      case 'notEqual': return '≠';
-      default: return '?';
-    }
-  }
-
   getChildNodes(nodeId, handleType = null) {
     const edges = this.edgeMap.get(nodeId) || [];
     return edges
       .filter(edge => handleType === null || edge.sourceHandle === handleType)
       .map(edge => edge.target);
-  }
-
-  getResourceName(resourceId) {
-    if (!resourceId) return '<span class="code-error">Unknown Resource</span>';
-    const resource = this.gameData?.resources?.find(r => r.id === resourceId);
-    return resource?.name || `<span class="code-error">${resourceId}</span>`;
-  }
-
-  getBuildingName(buildingId) {
-    if (!buildingId) return '<span class="code-error">Unknown Building</span>';
-    const building = this.gameData?.buildings?.find(b => b.id === buildingId);
-    return building?.name || `<span class="code-error">${buildingId}</span>`;
-  }
-
-  getUpgradeName(upgradeId) {
-    if (!upgradeId) return '<span class="code-error">Unknown Upgrade</span>';
-    const upgrade = this.gameData?.upgrades?.find(u => u.id === upgradeId);
-    return upgrade?.name || `<span class="code-error">${this.escapeHtml(upgradeId)}</span>`;
-  }
-
-  getAchievementName(achievementId) {
-    if (!achievementId) return '<span class="code-error">Unknown Achievement</span>';
-    const achievement = this.gameData?.achievements?.find(a => a.id === achievementId);
-    return achievement?.name || `<span class="code-error">${achievementId}</span>`;
   }
 }
 
