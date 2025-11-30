@@ -32,6 +32,7 @@
 - **Conditions** - If/else branching with multiple comparison operators
 - **Logic Nodes** - Delays, random chance, loops, sequences
 - **Code Preview** - Real-time pseudo-code generation with syntax highlighting
+- **Template-Based Nodes** - Easy to extend with auto-loading system
 
 ### 💾 Import/Export
 - **Game Export** - Compressed JSON with LZString
@@ -86,7 +87,15 @@ idle-game-creator/
 │   │   │   └── shared/          # Shared UI components
 │   │   ├── LogicEditor/         # Visual logic programming
 │   │   │   ├── LogicEditor.jsx  # Flow-based editor
-│   │   │   ├── nodes/           # Custom node types
+│   │   │   ├── LogicToolbox.jsx # Node library sidebar
+│   │   │   ├── nodes/           # Template-based node system
+│   │   │   │   ├── base/        # Base node templates
+│   │   │   │   ├── events/      # Event node definitions (auto-loaded)
+│   │   │   │   ├── actions/     # Action node definitions (auto-loaded)
+│   │   │   │   ├── conditions/  # Condition node definitions (auto-loaded)
+│   │   │   │   ├── logic/       # Logic node definitions (auto-loaded)
+│   │   │   │   ├── README.md    # Full developer guide
+│   │   │   │   └── QUICKSTART.md # Quick node creation guide
 │   │   │   └── shared/          # Node utilities
 │   │   ├── Player/              # Game runtime
 │   │   │   ├── GamePlayer.jsx   # Main game player
@@ -102,7 +111,9 @@ idle-game-creator/
 │   │   └── codePreviewGenerator.js  # Logic-to-code converter
 │   └── styles/                  # CSS modules
 ├── public/                      # Static assets
-└── docs/                        # Documentation
+├── docs/                        # Documentation
+├── REFACTORING_PLAN.md         # Planned architecture improvements
+└── README.md                   # This file
 ```
 
 ### Core Technologies
@@ -110,10 +121,20 @@ idle-game-creator/
 | Technology | Purpose |
 |------------|---------|
 | **React 18** | UI framework with hooks and context |
-| **Vite** | Build tool and dev server |
+| **Vite** | Build tool and dev server with HMR |
 | **React Flow** | Node-based visual programming |
 | **LZString** | Game data compression |
 | **CSS Variables** | Dynamic theming system |
+
+### Architecture Principles
+
+This project follows modern software architecture patterns:
+
+1. **Template-Based Systems** - Node system uses auto-loading templates
+2. **Separation of Concerns** - Clear boundaries between UI, logic, and engine
+3. **Hooks-First** - Custom React hooks for reusable logic
+4. **Component Composition** - Small, focused components over large monoliths
+5. **Auto-Loading** - Vite's `import.meta.glob` for dynamic imports
 
 ---
 
@@ -202,7 +223,35 @@ bonus = 1 + (prestigePoints * multiplier)
 
 ### Visual Programming
 
-The Logic Editor uses a **node-graph system** to define game behavior:
+The Logic Editor uses a **node-graph system** to define game behavior. The system is **fully template-based** and easily extensible.
+
+#### Node Architecture
+
+All nodes follow a template-based pattern with automatic loading:
+
+```
+nodes/
+├── base/                        # Base templates
+│   ├── BaseEventNode.jsx
+│   ├── BaseActionNode.jsx
+│   ├── BaseConditionNode.jsx
+│   └── BaseLogicNode.jsx
+├── events/                      # Event definitions (auto-loaded)
+│   ├── index.js                # Auto-loader using import.meta.glob
+│   ├── OnGameStart.jsx
+│   ├── AfterXClicks.jsx
+│   └── ... (19 total)
+├── actions/                     # Action definitions (auto-loaded)
+│   ├── index.js
+│   ├── AddResource.jsx
+│   └── ... (12 total)
+├── conditions/                  # Condition definitions (auto-loaded)
+│   ├── index.js
+│   └── ... (8 total)
+└── logic/                       # Logic definitions (auto-loaded)
+    ├── index.js
+    └── ... (5 total)
+```
 
 #### Node Types
 
@@ -210,19 +259,40 @@ The Logic Editor uses a **node-graph system** to define game behavior:
 ```javascript
 - onGameStart       // Triggered once on game load
 - onGameLoad        // Every time game loads
-- onResourceGain    // When a resource increases
-- afterClicks       // After N total clicks
-- onBuildingPurchase // When building is bought
-- everySecond       // Continuous tick event
+- onTick            // Every game tick (10/second)
+- onClick           // On resource click
+- afterXClicks      // After N total clicks
+- afterXSeconds     // After N seconds of playtime
+- afterXResources   // When resource reaches amount
+- afterBoughtUpgrade // After buying specific upgrade
+- afterXBoughtUpgrades // After buying N upgrades total
+- afterXResourcesSpent // After spending N resources
+- onPrestige        // On prestige trigger
+- afterXBuildings   // After buying N buildings
+- afterBoughtBuilding // After buying specific building
+- onAchievementUnlock // When achievement unlocks
+- afterXAchievements  // After unlocking N achievements
+- onResourceFull    // When resource reaches max
+- onResourceEmpty   // When resource reaches 0
+- afterXProduction  // After producing N resources
+- onBuildingMaxed   // When building reaches max count
+- afterPlaytime     // After N seconds of total playtime
 ```
 
 **Action Nodes** (Effects)
 ```javascript
 - addResource       // Add/remove resource amount
+- removeResource    // Remove resource amount
 - setResource       // Set resource to exact value
+- multiplyResource  // Multiply resource amount
 - unlockUpgrade     // Make upgrade available
+- unlockBuilding    // Make building available
 - showNotification  // Display message to player
+- addProduction     // Increase passive production
+- multiplyProduction // Multiply production rate
 - forcePrestige     // Trigger prestige programmatically
+- unlockAchievement // Unlock achievement
+- setClickPower     // Change click amount
 ```
 
 **Condition Nodes** (Branching)
@@ -230,7 +300,11 @@ The Logic Editor uses a **node-graph system** to define game behavior:
 - ifResource        // Compare resource amount
 - ifBuilding        // Check buildings owned
 - ifUpgradeOwned    // Check if upgrade purchased
+- ifAchievementUnlocked // Check if achievement unlocked
+- ifProductionRate  // Compare production rate
 - ifPrestigeLevel   // Compare prestige level
+- ifPlaytime        // Compare total playtime
+- ifBuildingOwned   // Check if building owned
 ```
 
 **Logic Nodes** (Control Flow)
@@ -239,7 +313,36 @@ The Logic Editor uses a **node-graph system** to define game behavior:
 - random            // Random chance (%)
 - loop              // Repeat N times
 - branch            // Parallel execution
+- sequence          // Sequential execution
 ```
+
+### Adding New Logic Nodes
+
+The system supports **hot-swappable nodes** through templates. See [nodes/QUICKSTART.md](src/components/LogicEditor/nodes/QUICKSTART.md) for details.
+
+**Example: Adding a new event node**
+
+```jsx
+// src/components/LogicEditor/nodes/events/OnPlayerDeath.jsx
+export default {
+  id: 'onPlayerDeath',
+  label: 'On Player Death',
+  icon: '💀',
+  description: 'When player dies',
+  category: 'events',
+  type: 'event',
+  defaultData: {
+    eventType: 'onPlayerDeath'
+  }
+  // Optional: component for properties
+};
+```
+
+That's it! The node will automatically:
+- ✅ Load on app start
+- ✅ Appear in the toolbox
+- ✅ Be available for drag-and-drop
+- ✅ Support all base node features
 
 ### Code Preview
 
@@ -362,35 +465,69 @@ export function NewElementProperties({ data, onChange }) {
 
 4. **Update GameEngine** to handle the new element
 
-### Adding a New Logic Node Type
+### Adding a New Logic Node
 
-1. **Create node file** in `components/LogicEditor/nodes/`:
+**Quick Method (Recommended):**
+
+1. Copy an existing node from the same category
+2. Update `id`, `label`, `icon`, `description`
+3. Modify `defaultData` with your fields
+4. Add `component` if properties needed
+5. Save and refresh - Done!
+
+See [nodes/QUICKSTART.md](src/components/LogicEditor/nodes/QUICKSTART.md) for detailed guide.
+
+**Full Process:**
+
+1. **Create node definition** in `components/LogicEditor/nodes/{category}/YourNode.jsx`:
 ```jsx
-export const NEW_NODE_TYPES = {
-  newAction: {
-    label: 'New Action',
-    component: ({ id, data, updateNodeData }) => {
-      // Node UI
-    }
+import { useContext } from 'react';
+import { GameDataContext } from '../../../Editor/GameDataContext';
+import { NodeDataUpdater } from '../../shared/NodeDataUpdater';
+
+export default {
+  id: 'yourNodeId',
+  label: 'Your Node Name',
+  icon: '🎯',
+  description: 'What your node does',
+  category: 'actions', // or events, conditions, logic
+  type: 'action',
+  defaultData: {
+    actionType: 'yourNodeId',
+    customField: 'default value'
+  },
+  component: ({ id, data, updateNodeData }) => {
+    const { handleChange } = NodeDataUpdater({
+      nodeId: id,
+      data,
+      onUpdate: updateNodeData
+    });
+
+    return (
+      <>
+        <label>Custom Field:</label>
+        <input
+          className="nodrag"
+          type="text"
+          name="customField"
+          value={data.customField || ''}
+          onChange={handleChange}
+        />
+      </>
+    );
   }
 };
 ```
 
-2. **Register in `CustomNodes.jsx`**:
-```jsx
-import { NewNode, NEW_NODE_TYPES } from './nodes/NewNode';
-
-export const nodeTypes = {
-  newNode: NewNode
-};
-```
+2. **Node automatically loads** - No manual imports needed!
 
 3. **Add execution logic** in `engine/LogicExecutor.js`:
 ```javascript
 executeAction(node, context) {
   switch (node.data.actionType) {
-    case 'newAction':
+    case 'yourNodeId':
       // Execute your action
+      console.log('Executing:', node.data.customField);
       break;
   }
 }
@@ -399,8 +536,8 @@ executeAction(node, context) {
 4. **Update code preview** in `utils/codePreviewGenerator.js`:
 ```javascript
 getActionDescription(data) {
-  case 'newAction':
-    return `<span class="code-keyword">new action</span>`;
+  case 'yourNodeId':
+    return `<span class="code-keyword">your action</span>: ${data.customField}`;
 }
 ```
 
@@ -415,6 +552,7 @@ getActionDescription(data) {
 3. **LZString**: Compression reduces save data by ~70%
 4. **Auto-save Debounce**: 5-second delay prevents excessive writes
 5. **React Flow**: Virtualization for large node graphs
+6. **Auto-Loading**: Dynamic imports reduce initial bundle size
 
 ### Performance Benchmarks
 
@@ -424,10 +562,17 @@ getActionDescription(data) {
 | Tick Processing | < 10ms | ~2-5ms |
 | Node Graph (100 nodes) | 60 FPS | 60 FPS |
 | Save Data Size | < 50KB | ~15-30KB |
+| Logic Node Types | 50+ | 44 nodes |
 
 ---
 
 ## 🚧 Roadmap
+
+### In Progress
+
+- [ ] **GameEngine Modularization** - Manager-based architecture (see [REFACTORING_PLAN.md](REFACTORING_PLAN.md))
+- [ ] **LogicEditor Hooks** - Extract reusable hooks
+- [ ] **Code Preview Refactor** - Template-based generators
 
 ### Planned Features
 
@@ -435,12 +580,21 @@ getActionDescription(data) {
 - [ ] **Templates** - Pre-built game templates
 - [ ] **Multiplayer** - Shared game sessions
 - [ ] **Mobile Support** - Touch-friendly editor
-- [ ] **Plugin System** - Custom node types
+- [ ] **Plugin System** - Custom node types from external sources
 - [ ] **Analytics** - Player behavior tracking
 - [ ] **A/B Testing** - Test game balance
 - [ ] **Cloud Save** - Cross-device sync
 - [ ] **Asset Library** - Shared icons/themes
 - [ ] **Script Nodes** - Custom JavaScript in logic
+- [ ] **Hot Reload** - Node changes without refresh
+
+### Recently Completed
+
+- ✅ **Template-Based Node System** - Auto-loading node architecture
+- ✅ **Code Preview** - Syntax-highlighted pseudo-code generation
+- ✅ **Node Documentation** - Comprehensive developer guides
+- ✅ **Deep Change Detection** - Fixed gameData memoization
+- ✅ **Pixel Art Editor** - Built-in icon creator
 
 ### Community Ideas
 
@@ -465,6 +619,7 @@ git checkout -b feature/your-feature-name
 - Follow existing code style
 - Add comments for complex logic
 - Test thoroughly before committing
+- Update documentation if needed
 
 ### 3. Submit a Pull Request
 
@@ -477,8 +632,15 @@ git checkout -b feature/your-feature-name
 
 - **Bug Fixes**: Always welcome!
 - **New Features**: Open an issue first to discuss
+- **New Logic Nodes**: Follow the template system
 - **Documentation**: Improvements highly appreciated
 - **Tests**: Add tests for new features
+
+### Development Notes
+
+- See [REFACTORING_PLAN.md](REFACTORING_PLAN.md) for planned architecture changes
+- See [nodes/README.md](src/components/LogicEditor/nodes/README.md) for node development
+- See [nodes/QUICKSTART.md](src/components/LogicEditor/nodes/QUICKSTART.md) for quick node guide
 
 ---
 
