@@ -259,6 +259,12 @@ function GameEditor({ onPreview }) {
             >
               Logic
             </button>
+            <button
+              className={`toolbar-tab ${selectedTab === 'settings' ? 'active' : ''}`}
+              onClick={() => setSelectedTab('settings')}
+            >
+              Settings
+            </button>
           </div>
 
           <div className="toolbar-right">
@@ -361,11 +367,7 @@ function GameEditor({ onPreview }) {
 
         {selectedTab === 'game' && (
           <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto', padding: '2rem' }}>
-            {!selectedItem && (
-              <div className="properties-panel" style={{ marginBottom: '2rem' }}>
-                <GameMetaProperties meta={gameData.meta} onChange={updateMeta} prestige={gameData.prestige} onPrestigeChange={prestige => setGameData(prev => ({ ...prev, prestige }))} />
-              </div>
-            )}
+
 
             {selectedItem && selectedData && (
               <div className="properties-panel" style={{ marginBottom: '2rem' }}>
@@ -430,6 +432,14 @@ function GameEditor({ onPreview }) {
               <ThemeProperties theme={gameData.theme} onChange={theme => setGameData(prev => ({ ...prev, theme }))} />
             </div>
             <ThemeCanvas theme={gameData.theme} onChange={theme => setGameData(prev => ({ ...prev, theme }))} />
+          </div>
+        )}
+
+        {selectedTab === 'settings' && (
+          <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto', padding: '2rem' }}>
+            <div className="properties-panel" style={{ marginBottom: '2rem' }}>
+              <GameMetaProperties meta={gameData.meta} onChange={updateMeta} prestige={gameData.prestige} onPrestigeChange={prestige => setGameData(prev => ({ ...prev, prestige }))} />
+            </div>
           </div>
         )}
       </div>
