@@ -4,9 +4,9 @@ import { useGameIO } from './hooks/useGameIO'; // Import the new hook
 import { BuildingProperties } from './properties/BuildingProperties';
 import { UpgradeProperties } from './properties/UpgradeProperties';
 import { AchievementProperties } from './properties/AchievementProperties';
-import { ThemeProperties } from './properties/ThemeProperties';
-import { ThemeCanvas } from './ThemeCanvas';
 import PixelArtEditor from './PixelArtEditor';
+import { LayoutEditor } from '../LayoutEditor/CompleteWebflowEditor';
+import { exportToZIP } from '../../export/zipExporter';
 import {
   BuildingCardPreview,
   UpgradeCardPreview,
@@ -65,6 +65,16 @@ function GameEditor({ onPreview }) {
     onPreview(gameData);
   };
 
+  const handleDownloadZIP = async () => {
+    try {
+      await exportToZIP(gameData);
+      alert('Game exported successfully! Opening your downloaded ZIP file.');
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to export game. Please try again.');
+    }
+  };
+
   const getSelectedData = () => {
     if (!selectedItem) return null;
 
@@ -86,7 +96,7 @@ function GameEditor({ onPreview }) {
 
   return (
     <GameDataContext.Provider value={{ gameData, onGameDataChange: setGameData }}>
-      <div className={`editor-container ${selectedTab === 'logic' ? 'logic-view-active' : ''}`}>
+      <div className={`editor-container ${selectedTab === 'logic' ? 'logic-view-active' : ''} ${selectedTab === 'layout' ? 'layout-view-active' : ''}`}>
         {/* Toolbar */}
         <div className="editor-toolbar">
           <div className="toolbar-left">
@@ -104,10 +114,10 @@ function GameEditor({ onPreview }) {
               Game
             </button>
             <button
-              className={`toolbar-tab ${selectedTab === 'theme' ? 'active' : ''}`}
-              onClick={() => setSelectedTab('theme')}
+              className={`toolbar-tab ${selectedTab === 'layout' ? 'active' : ''}`}
+              onClick={() => setSelectedTab('layout')}
             >
-              Theme
+              Layout <span className="badge-wip">WIP</span>
             </button>
             <button
               className={`toolbar-tab ${selectedTab === 'logic' ? 'active' : ''}`}
@@ -137,20 +147,24 @@ function GameEditor({ onPreview }) {
             <button className="toolbar-button" onClick={handlePreviewClick}>
               Preview
             </button>
-            <button className="toolbar-button primary" onClick={handleExport}>
-              Export
+            <button className="toolbar-button" onClick={handleExport}>
+              Export Code
+            </button>
+            <button className="toolbar-button primary" onClick={handleDownloadZIP}>
+              Download ZIP
             </button>
           </div>
         </div>
 
-        {/* Left Sidebar - Layers */}
-        <div className="left-sidebar">
-          <div className="sidebar-header">
-            <span className="sidebar-title">Game Elements</span>
-          </div>
+        {/* Left Sidebar - Layers (hidden in layout/logic tabs) */}
+        {selectedTab !== 'layout' && selectedTab !== 'logic' && selectedTab !== 'wiki' && (
+          <div className="left-sidebar">
+            <div className="sidebar-header">
+              <span className="sidebar-title">Game Elements</span>
+            </div>
 
-          <div className="sidebar-content">
-            {selectedTab === 'game' && (
+            <div className="sidebar-content">
+              {selectedTab === 'game' && (
               <>
                 <LayerSection
                   title="Resources"
@@ -197,25 +211,40 @@ function GameEditor({ onPreview }) {
                 />
               </>
             )}
+            </div>
+          </div>
+        )}
 
-            {selectedTab === 'logic' && (
+        {/* Logic Sidebar */}
+        {selectedTab === 'logic' && (
+          <div className="left-sidebar">
+            <div className="sidebar-content">
               <LogicToolbox
                 setNodesRef={logicSetNodesRef}
                 updateNodeDataRef={logicUpdateNodeDataRef}
               />
-            )}
-
-            {selectedTab === 'wiki' && (
-              <WikiSidebar onArticleSelect={setSelectedWikiArticle} selectedArticle={selectedWikiArticle} />
-            )}
+            </div>
           </div>
+        )}
 
-          {/* Back Button at bottom of sidebar */}
-
-        </div>
+        {/* Wiki Sidebar */}
+        {selectedTab === 'wiki' && (
+          <div className="left-sidebar">
+            <div className="sidebar-content">
+              <WikiSidebar onArticleSelect={setSelectedWikiArticle} selectedArticle={selectedWikiArticle} />
+            </div>
+          </div>
+        )}
 
       {/* Center Canvas */}
       <div className="editor-canvas">
+        {selectedTab === 'layout' && (
+          <LayoutEditor
+            gameData={gameData}
+            onLayoutChange={(layout) => setGameData(prev => ({ ...prev, layout }))}
+          />
+        )}
+
         {selectedTab === 'logic' && (
           <>
             <LogicEditor
@@ -290,15 +319,6 @@ function GameEditor({ onPreview }) {
             )}
 
 
-          </div>
-        )}
-
-        {selectedTab === 'theme' && (
-          <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto', padding: '2rem' }}>
-            <div className="properties-panel" style={{ marginBottom: '2rem' }}>
-              <ThemeProperties theme={gameData.theme} onChange={theme => setGameData(prev => ({ ...prev, theme }))} />
-            </div>
-            <ThemeCanvas theme={gameData.theme} onChange={theme => setGameData(prev => ({ ...prev, theme }))} />
           </div>
         )}
 

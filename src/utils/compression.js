@@ -38,7 +38,7 @@ export const CompressionUtils = {
 
   // Validiert Game Data Struktur
   validate(gameData) {
-    const required = ['meta', 'resources', 'buildings', 'upgrades', 'achievements', 'theme', 'logic'];
+    const required = ['meta', 'resources', 'buildings', 'upgrades', 'achievements', 'logic', 'layout'];
 
     for (const field of required) {
       if (!gameData[field]) {
@@ -140,20 +140,87 @@ export const CompressionUtils = {
         divisor: 1000,
         multiplier: 1
       },
-      theme: {
-        primaryColor: '#6366f1',
-        secondaryColor: '#818cf8',
-        backgroundColor: '#0a0a0a',
-        textColor: '#ffffff',
-        accentColor: '#10b981',
-        fontFamily: 'Inter, system-ui, sans-serif',
-        borderRadius: '8px'
-      },
       logic: {
         nodes: [
           { id: 'event-start', type: 'event', position: { x: 250, y: 50 }, data: { eventType: 'onGameStart' } },
         ],
         edges: [],
+      },
+      layout: {
+        template: 'classic',
+        blocks: [
+          {
+            id: 'header',
+            type: 'header',
+            order: 0,
+            style: {
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem',
+              padding: '1.5rem',
+              backgroundColor: '#1a1a1a',
+              borderRadius: '8px'
+            }
+          },
+          {
+            id: 'main',
+            type: 'container',
+            order: 1,
+            style: {
+              display: 'grid',
+              gridTemplateColumns: '250px 1fr 300px',
+              gap: '1rem',
+              padding: '1rem',
+              height: 'calc(100vh - 200px)'
+            }
+          },
+          {
+            id: 'resources-sidebar',
+            type: 'resources',
+            parentId: 'main',
+            order: 0,
+            style: {
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.5rem',
+              padding: '1rem',
+              backgroundColor: '#1a1a1a',
+              borderRadius: '8px',
+              overflowY: 'auto'
+            }
+          },
+          {
+            id: 'click-area',
+            type: 'click',
+            parentId: 'main',
+            order: 1,
+            style: {
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '1rem',
+              padding: '2rem',
+              backgroundColor: '#1a1a1a',
+              borderRadius: '8px'
+            }
+          },
+          {
+            id: 'buildings-sidebar',
+            type: 'tabs',
+            parentId: 'main',
+            order: 2,
+            style: {
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem',
+              padding: '1rem',
+              backgroundColor: '#1a1a1a',
+              borderRadius: '8px',
+              overflowY: 'auto'
+            }
+          }
+        ]
       }
     };
   }

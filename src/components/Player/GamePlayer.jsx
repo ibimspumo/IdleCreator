@@ -98,15 +98,15 @@ function GamePlayer({ gameData }) {
     up => gameState.upgrades[up.id]?.unlocked && !gameState.upgrades[up.id]?.purchased
   );
 
-  // Apply theme
+  // Fixed black/white theme
   const themeStyle = {
-    '--primary-color': gameData.theme.primaryColor,
-    '--secondary-color': gameData.theme.secondaryColor,
-    '--background-color': gameData.theme.backgroundColor,
-    '--text-color': gameData.theme.textColor,
-    '--accent-color': gameData.theme.accentColor,
-    '--font-family': gameData.theme.fontFamily,
-    '--border-radius': gameData.theme.borderRadius
+    '--primary-color': '#ffffff',
+    '--secondary-color': '#e0e0e0',
+    '--background-color': '#000000',
+    '--text-color': '#ffffff',
+    '--accent-color': '#ffffff',
+    '--font-family': 'Inter, system-ui, sans-serif',
+    '--border-radius': '8px'
   };
 
   return (
