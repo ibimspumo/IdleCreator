@@ -32,6 +32,7 @@
 - **Real-Time Preview** - Instant feedback on all game changes
 - **Template System** - Hot-swappable, auto-loading component architecture
 - **Export/Import** - Compressed JSON with LZString (~70% reduction)
+- **Webflow-Style Properties** - Professional UI with unit selectors and visual controls
 
 ### 🎮 Game Mechanics
 
@@ -125,6 +126,13 @@ idle-game-creator/
 │   │   │   │   └── shared/          # Reusable form components
 │   │   │   └── hooks/               # Editor-specific hooks
 │   │   │
+│   │   ├── LayoutEditor/            # Layout Editor (WIP)
+│   │   │   ├── WebflowPropertiesPanel.jsx # Webflow-style properties
+│   │   │   ├── SpacingSection.jsx   # Box model editor
+│   │   │   ├── SpacingPopover.jsx   # Unit value editor
+│   │   │   ├── UnitInput.jsx        # Value + unit selector
+│   │   │   └── GoogleFontsSelector.jsx # Google Fonts API integration
+│   │   │
 │   │   ├── LogicEditor/             # Visual Logic System
 │   │   │   ├── LogicEditor.jsx      # Flow editor (210 lines)
 │   │   │   ├── hooks/               # Logic editor hooks
@@ -185,6 +193,7 @@ idle-game-creator/
 | **State** | Context API | Global game data |
 | **Compression** | LZString | Game data compression |
 | **Styling** | CSS Variables | Dynamic theming |
+| **Fonts** | Google Fonts API | 200+ web fonts integration |
 
 ### Architecture Principles
 
@@ -361,6 +370,64 @@ generate(data) {
   }
 }
 ```
+
+---
+
+## Layout Editor (WIP)
+
+### Webflow-Style Properties Panel
+
+The Layout Editor features a professional properties panel inspired by Webflow:
+
+#### Unit Selectors
+All size and spacing inputs support multiple CSS units:
+- **px** - Pixels (absolute)
+- **em** - Relative to parent font size
+- **rem** - Relative to root font size
+- **%** - Percentage of parent
+- **vh** - Viewport height percentage
+- **vw** - Viewport width percentage
+
+```jsx
+<UnitInput
+  value="16px"
+  onChange={(value) => updateStyle('fontSize', value)}
+/>
+```
+
+#### Google Fonts Integration
+Dynamic font loading via Google Fonts API:
+- 200+ most popular fonts
+- Live search and filter
+- Font preview on hover
+- Automatic font loading
+
+```jsx
+<GoogleFontsSelector
+  value="Inter"
+  onChange={(font) => updateStyle('fontFamily', font)}
+/>
+```
+
+#### Interactive Box Model
+Visual spacing editor with Webflow-style popovers:
+- Click margin/padding values to edit
+- Quick value buttons (0, 0.125, 0.25, 0.5, 1, 2, 4, 8)
+- Real-time preview
+- All sides independently configurable
+
+```jsx
+<SpacingSection
+  block={selectedBlock}
+  updateStyle={updateBlockStyle}
+/>
+```
+
+**Features:**
+- Fixed positioning to avoid z-index conflicts
+- Single popover that repositions based on clicked element
+- Apply/Cancel actions for controlled updates
+- Supports all CSS units
 
 ---
 
